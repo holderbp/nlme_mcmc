@@ -45,7 +45,7 @@ In a mixed-effects model (or, in Bayesian language, a Bayesian Hierarchical Mode
 * other parameters, e.g., those specifying the error-model for the calculation of log-likelihood (OTHER parameters)
 
 Bayes theorem for densities (for a particular data set "data", a chosen model hypothesis, "H", and associated parameters, "pars") is:
-![f(pars|data, H) = f(data|pars, H) * f(pars|H) / f(data|H)](/images/eqn_bayes-thm-densities.png)
+![f(pars|data, H) = f(data|pars, H) * f(pars|H) / f(data|H)](/images/eqn_bayes-thm-densities.jpg)
 
    where the lhs is the posterior density of the parameters,
    the numerator on the rhs is the "likelihood" of the parameters
