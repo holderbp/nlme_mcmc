@@ -1,7 +1,7 @@
 # Nonlinear Mixed Effects MCMC 
 ## A package for performing Bayesian inference on a Nonlinear Mixed Effects (NLME) model (aka, Bayesian Hierarchical Model) using MCMC
 
-This code wraps the [emcee](https://emcee.readthedocs.io/en/stable/) python module, providing scripts for: building a Bayesian Hierarchical model, running the MCMC chains to convergence (and giving informative running diagnostic plots and information), plotting the samples from the posterior density, and calculating the marginal likelihood associated to a particular statistical "model hypothesis".
+This code wraps the [emcee](https://emcee.readthedocs.io/en/stable/) python module, providing scripts for: building a Bayesian Hierarchical model, running the MCMC chains to convergence (and giving frequent diagnostic information, plots, and data), plotting the samples from the posterior density, and calculating the marginal likelihood associated to a particular statistical "model hypothesis".
 
 Sections below:
 
