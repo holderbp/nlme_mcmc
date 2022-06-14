@@ -21,7 +21,7 @@ And the following three template scripts must be edited by the user to provide t
   * Specifies the prior density for each parameter in INDIV_NOPOP, POP, and OTHER (the priors for each INDIV_POP parameter is a conditional prior with respect to the POP distribution and is calculated automatically --- this is the essence of a BAyesian Hierarchical model).
   * Specifies the likelihood function, in particular the error model to be used (which is potentially different for different data sets within the data analysis sub-project).
 
-For any data analysis subproject, there will likely be multiple "modhyp" modules, each specifying a different statistical model hypothesis, which can be compared/ranked for parsimony by their marginal likelihood.
+  For any data analysis subproject, there will likely be multiple "modhyp" modules, each specifying a different statistical model hypothesis, which can be compared/ranked for parsimony by their marginal likelihood.
 
 ## Background on Bayesian Hierarchical / NLME
 
