@@ -38,6 +38,7 @@ The following three template modules must be edited by the user when creating a 
 ## Theoretical background on Bayesian Hierarchical Models
 
 In a mixed-effects model (or, in Bayesian language, a Bayesian Hierarchical Model), we assume four types of parameters:
+
     * individual-specific but assumed to be drawn from a distribution over the population of individuals. These are sometimes called "random effects" but we will call them: "individual-population" (INDIV_POP) parameters
     * individual-specific but without any assumption of being drawn from a distribution (INDIV_NOPOP parameters)
     * parameters associated to specifying the population distribution itself (POP parameters)
