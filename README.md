@@ -39,3 +39,15 @@ The following three template modules must be edited by the user when creating a 
 
 ## How to create a new project
 
+1. Create a new directory called <projectname> within the `projects` directory.
+
+2. Copy the static module files (first three listed in the previous section) into this new directory.
+
+3. Copy the data, modhyp, and evolve-model modules into the new directory, replacing <projectname>, <subprojectname>, and <modhypname> with descriptive names for the project (the larger dataset), the data analysis subproject (the particular subset of the larger project dataset to be considered now), and the statistical model hypothesis (what choices are being made about the parameters to be inferred).  Later, different model hypotheses (and different data analysis sub-projects) can be considered by creating new copies of the `modhyp` module.
+
+4. Edit the data module:
+    * do this
+    * then do this
+
+5. Then another thing
+
