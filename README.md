@@ -66,8 +66,9 @@ For a Bayesian hierarchical model, we assume that the joint prior distribution o
 
 in other words, our assumption that the INDIV_POP parameters are drawn from a distribution over the population is encoded in the prior.  So, we must specify:
 
-* a distribution for the conditional density, for instance, INDIV_POP(s) are normally-distributed over the population.
-* a prior distribution for each of the POP parameters specifying that distribution.
+* a functional form for the conditional prior density, i.e., the population distribution's type (e.g., INDIV_POP(s) are normally-distributed about some population mean)
+
+* a prior density for each of the POP parameters specifying that distribution.
 
 Here, we will consider the priors of the OTHER and INDIV_NOPOP parameters to be independent such that the full joint prior is written:
 
