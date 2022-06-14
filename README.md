@@ -45,9 +45,12 @@ The following three template modules must be edited by the user when creating a 
 
 3. Copy the `data`, `modhyp`, and `evolvemodel` template modules into the new directory, replacing \<*projectname*\>, \<*subprojectname*\>, and \<*modhypname*\> with descriptive names for the project (the larger dataset), the data analysis subproject (the particular subset of the larger project dataset to be considered now), and the statistical model hypothesis (what choices are being made about the parameters to be inferred).  Later, different model hypotheses (and different data analysis sub-projects) can be considered by creating new copies of the `modhyp` module.
 
-4. Edit the data module:
-    * do this
-    * then do this
+4. Create subdirectories within the new project directory: `plots`, `output`, `logfiles`, and `data`.  Place the raw project data file within `data`.
 
-5. Then another thing
+4. Edit the `data` module:
+    * Specify the filename for import
+    * 
+
+5. Edit the `evolvemodel` module:
+    * For every evolvemodel specified within the data module, create a method that takes independent values `X` and returns a dictionary of numpy arrays with keys the y_types.
 
