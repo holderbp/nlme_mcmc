@@ -53,8 +53,10 @@ where the left-hand side is the *posterior density* of the parameters, the numer
 For a Bayesian hierarchical model, we assume that the joint prior distribution of the individual-pop and the population-distribution parameters should be written in terms of a conditional density:
 ![f\left({\rm INDIV\_POP},  {\rm POP} \; \middle| \;  H \right) = f\left({\rm INDIV\_POP}  \; \middle| \;  {\rm POP} , H \right) \, \cdot \, f\left({\rm POP}  \; \middle| \;  H \right)](/images/eqn_joint-prior.png)
 in other words, our assumption that the INDIV_POP parameters are drawn from a distribution over the population is encoded in the prior.  So, we must specify:
+
 * a distribution for the conditional density, for instance, INDIV_POP(s) are normally-distributed over the population.
 * a prior distribution for each of the POP parameters specifying that distribution.
+
 Here, we will consider the priors of the OTHER and INDIV_NOPOP parameters to be independent such that the full joint prior is written:
 ![f\left(\theta \; \middle| \; H \right) &= f\left({\rm INDIV\_POP},  {\rm POP}, {\rm INDIV\_NOPOP}, {\rm OTHER} \right) \\
 & =  f\left({\rm INDIV\_POP},  {\rm POP}\right) \, \cdot \, f\left({\rm INDIV\_NOPOP}, {\rm OTHER} \right)](/images/eqn_joint-prior-full.png)
