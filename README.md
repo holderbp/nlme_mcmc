@@ -43,7 +43,7 @@ Bayesian inference for a mixed-effects model (or, in Bayesian language, a Bayesi
 
 To implement this, we assume four types of parameters:
 
-* INDIV_POP: Individual-specific parameters, and assumed to be drawn from a distribution over the population of individuals. In a standard mixed-effects model, these are sometimes called "random effects" (although usually on only the deviation from the population mean is called the random effect).
+* INDIV_POP: Individual-specific parameters that are assumed to be drawn from a distribution over the population of individuals. In a standard mixed-effects model, these are sometimes called "random effects" (although usually on only the deviation from the population mean is called the random effect).
 * INDIV_NOPOP: Individual-specific parameters, but without any assumption of being drawn from a distribution.
 * POP: Parameters associated to specifying the population distribution(s).
 * OTHER: Other parameters, for example those that are assumed to have a common value for all individuals, or those specifying the error-model for the calculation of log-likelihood.
