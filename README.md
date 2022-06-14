@@ -39,7 +39,7 @@ The following three template modules must be edited by the user when creating a 
 
 ## How to create a new project
 
-1. Create a new directory called <projectname> within the `projects` directory.
+1. Create a new directory called \<*projectname*\> within the `projects` directory.
 
 2. Copy the static module files (first three listed in the previous section) into this new directory.
 
