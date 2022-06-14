@@ -44,8 +44,8 @@ In a mixed-effects model (or, in Bayesian language, a Bayesian Hierarchical Mode
 * parameters associated to specifying the population distribution itself (POP parameters)
 * other parameters, e.g., those specifying the error-model for the calculation of log-likelihood (OTHER parameters)
 
-Bayes theorem for densities (for a particular data set "data", a chosen model hypothesis, "H", and associated parameters, "pars") is:
-![f(pars|data, H) = f(data|pars, H) * f(pars|H) / f(data|H)](/images/eqn_bayes-thm-densities.png)
+Bayes theorem for densities (for a particular data set *d*, a chosen model hypothesis, *H*, and associated parameters, *theta*) is:
+![f_{\vec{\Theta}} \left(\vec{\theta} \; \middle| \;  \left\{ \vec{D} = \vec{d} \right\} \cap \mathcal{H}_k \right)  = \frac{f_{\vec{D}} \left( \vec{d} \; \middle| \; \left\{ \vec{\Theta} = \vec{\theta} \right\} \cap \mathcal{H}_k \right) \, \cdot \,f_{\vec{\Theta}} \left( \vec{\theta} \; \middle| \; \mathcal{H}_k \right)}{f_{\vec{D}} \left( \vec{d} \; \middle| \; \mathcal{H}_k \right)}](/images/eqn_bayes-thm-densities.png)
 
    where the lhs is the posterior density of the parameters,
    the numerator on the rhs is the "likelihood" of the parameters
