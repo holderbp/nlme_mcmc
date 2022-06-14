@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# give a commandline argument to describe the run, e.g.,
+#
+#   ./runit w-covariance
+#
+# writes to log files:
+#
+#   logs/log_2022-05-19_0711_w-covariance.log
+#   logs/err_2022-05-19_0711_w-covariance.log
+
+datestr=$(date '+%Y-%m-%d_%H%M')
+python mixed-effects_mcmc.py \
+       2> logfiles/${datestr}_err_${1}.log > logfiles/${datestr}_log_${1}.log
+
