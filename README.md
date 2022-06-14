@@ -3,6 +3,16 @@
 
 This code wraps the [emcee](https://emcee.readthedocs.io/en/stable/) python module, providing scripts for: building a Bayesian Hierarchical model, running MCMC to convergence (and giving informative running diagnostic plots and information), plotting the posterior density, and calculating the marginal likelihood associated to the chosen model hypothesis.
 
+Sections below:
+
+1. [Overview of files](#overview-of-files)
+
+2. [Theoretical background on Bayesian Hierarchical Models](#theoretical-background-on-bayesian-hierarchical-models)
+
+3. [How to create a new project](#how-to-create-a-new-project)
+
+## Overview of files
+
 The following modules are static and provide the structure of the model, the running of the MCMC, and other related tasks:
 
 * `mixed-effects_mcmc.py` --- Imports a user-provided "model hypothesis" module and then runs the MCMC to convergence, providing regular output (diagnostic information to user/logfile; most recent samples; plots of: the autocorrelation time, the marginal likelihood, recent chain dynamics).
@@ -25,7 +35,7 @@ And the following three template scripts must be edited by the user to provide t
 
 * Another item
 
-## Background on Bayesian Hierarchical / NLME
+## Theoretical background on Bayesian Hierarchical Models
 
-## Creating a new project
+## How to create a new project
 
