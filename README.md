@@ -60,6 +60,7 @@ in other words, our assumption that the INDIV_POP parameters are drawn from a di
 Here, we will consider the priors of the OTHER and INDIV_NOPOP parameters to be independent such that the full joint prior is written:
 ![f\left(\theta \; \middle| \; H \right) &= f\left({\rm INDIV\_POP},  {\rm POP}, {\rm INDIV\_NOPOP}, {\rm OTHER} \right) \\
 & =  f\left({\rm INDIV\_POP},  {\rm POP}\right) \, \cdot \, f\left({\rm INDIV\_NOPOP}, {\rm OTHER} \right)](/images/eqn_joint-prior-full.png)
+
 where the priors for the OTHER and INDIV_NOPOP parameters must be specified.
 
 ## How to create a new project
