@@ -31,7 +31,7 @@ The following three template modules must be edited by the user when creating a 
     * Specifies the prior density for each parameter in INDIV_NOPOP, POP, and OTHER (the priors for each INDIV_POP parameter is a conditional prior with respect to the POP distribution and is calculated automatically --- this is the essence of a Bayesian Hierarchical model).
     * Specifies the likelihood function, in particular the error model to be used (which is potentially different for different data sets within the data analysis sub-project).
     
-  For any data analysis subproject, there will likely be multiple "modhyp" modules, each specifying a different statistical model hypothesis, which can be compared/ranked for parsimony by their marginal likelihood.
+  For any data analysis subproject, a user will likely create multiple "modhyp" modules, each specifying a different statistical model hypothesis, which can be compared/ranked for parsimony by their marginal likelihood.
 
 * `module_projectname_evolvemodel.py` --- Contains all dynamical models for generating simulations to be compared to the data in the data project (within the likelihood function for a particular sub-project + model-hypothesis). A single evolve-model might produce multiple "y-types" of output that can be compared to multiple different data sets. The data module provides the structure for --- and the model-hyp module executes --- evolving the necessary evolve-models for the data sets within a chosen data analysis sub-project.
 
