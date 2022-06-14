@@ -37,9 +37,9 @@ The following three template modules must be edited by the user when creating a 
 
 ## Theoretical background on Bayesian Hierarchical Models
 
-Bayesian inference for a mixed-effects model (or, in Bayesian language, a Bayesian Hierarchical Model) is identical to standard inference, but utilizes two implmentation assumptions:
-* the prior density for a parameter that is assumed to be drawn from a distribution over the population comes from a conditional prior with respect to that distribution, and
-* the likelihood does not depend on the parameters associated to those population distributions.
+Bayesian inference for a mixed-effects model (or, in Bayesian language, a Bayesian Hierarchical Model) is identical to standard inference, but utilizes two implementation assumptions:
+* the prior density for a parameter that is assumed to be drawn from a distribution over the population is expressed as a conditional prior with respect to that distribution, and
+* the likelihood function is assumed to be independent of the parameters associated to those population distributions.
 
 To implement this, we assume four types of parameters:
 
