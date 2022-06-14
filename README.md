@@ -37,7 +37,9 @@ The following three template modules must be edited by the user when creating a 
 
 ## Theoretical background on Bayesian Hierarchical Models
 
-In a mixed-effects model (or, in Bayesian language, a Bayesian Hierarchical Model), we assume four types of parameters:
+Bayesian inference for a mixed-effects model (or, in Bayesian language, a Bayesian Hierarchical Model) is identical to standard inference, but utilizes a special form of the prior density, in which parameters that are assumed to be drawn from a distribution over the population receive a conditional prior with respect to that distribution.
+
+So, to implement this, we assume four types of parameters:
 
 * INDIV_POP: Individual-specific, and assumed to be drawn from a distribution over the population of individuals. These are sometimes called "random effects" but we will call them "individual-population" parameters.
 * INDIV_NOPOP: Individual-specific, but without any assumption of being drawn from a distribution.
