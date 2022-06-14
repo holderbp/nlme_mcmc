@@ -40,7 +40,7 @@ The following three template modules must be edited by the user when creating a 
 A mixed-effects statistical model (or, in Bayesian language, a Bayesian Hierarchical Model) is applied to datasets where the responses of multiple "individuals" has been measured.  Instead of assuming that the explanatory parameters for the responses of different individuals are independent, one assumes that they are random variables drawn from some (as yet unknown) distribution over the population of all individuals.  
 
 Bayesian inference for a mixed-effects model follows the standard inference protocol (i.e., applying Bayes Theorem for probability densities), but two implementation assumptions are made:
-* the prior density for a parameter that is assumed to be drawn from a distribution over the population is expressed in terms of the conditional prior with respect to that distribution, and
+* the prior density for a parameter that is assumed to be drawn from a population distribution is expressed in terms of the conditional prior with respect to that distribution, and
 * the likelihood function is assumed to be independent of the parameters associated to those population distributions.
 
 To implement this, we assume four types of parameters:
