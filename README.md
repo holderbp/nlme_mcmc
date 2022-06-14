@@ -7,7 +7,7 @@ Sections below:
 
 1. [Overview of files](#overview-of-files)
 
-2. [Theoretical background on Bayesian Hierarchical Models](#theoretical-background-on-bayesian-hierarchical-models)
+2. [Theoretical background and implementation of Bayesian Hierarchical Models](#theoretical-background-and-implementation-of-bayesian-hierarchical-models)
 
 3. [How to create a new project](#how-to-create-a-new-project)
 
