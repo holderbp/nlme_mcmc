@@ -33,7 +33,7 @@ The following three template modules must be edited by the user when creating a 
     
   For any data analysis subproject, there will likely be multiple "modhyp" modules, each specifying a different statistical model hypothesis, which can be compared/ranked for parsimony by their marginal likelihood.
 
-* Another item
+* `module_projectname_evolvemodel.py` --- Contains all dynamical models for generating simulations to be compared to the data in the data project (within the likelihood function for a particular sub-project/model-hypothesis). A single evolve-model might produce multiple "y-types" of output that can be compared to multiple data sets. The data module provides the structure for --- and the model-hyp module executes --- evolving the necessary evolve-models for the data sets within a chosen data analysis sub-project.
 
 ## Theoretical background on Bayesian Hierarchical Models
 
