@@ -39,10 +39,10 @@ The following three template modules must be edited by the user when creating a 
 
 In a mixed-effects model (or, in Bayesian language, a Bayesian Hierarchical Model), we assume four types of parameters:
 
-* INDIV_POP: individual-specific, and assumed to be drawn from a distribution over the population of individuals. These are sometimes called "random effects" but we will call them "individual-population" parameters.
-* INDIV_NOPOP: individual-specific, but without any assumption of being drawn from a distribution.
-* POP: parameters associated to specifying the population distribution itself.
-* OTHER: for instance parameters that are assumed to have a common value for all individuals, or those specifying the error-model for the calculation of log-likelihood.
+* INDIV_POP: Individual-specific, and assumed to be drawn from a distribution over the population of individuals. These are sometimes called "random effects" but we will call them "individual-population" parameters.
+* INDIV_NOPOP: Individual-specific, but without any assumption of being drawn from a distribution.
+* POP: Parameters associated to specifying the population distribution(s).
+* OTHER: Other parameters, for example those that are assumed to have a common value for all individuals, or those specifying the error-model for the calculation of log-likelihood.
 
 Bayes theorem for densities (for a particular data set, *d*, a particular chosen model hypothesis, *Hk*, and associated parameters, *theta*) is:
 ![f_{\vec{\Theta}} \left(\vec{\theta} \; \middle| \;  \left\{ \vec{D} = \vec{d} \right\} \cap \mathcal{H}_k \right)  = \frac{f_{\vec{D}} \left( \vec{d} \; \middle| \; \left\{ \vec{\Theta} = \vec{\theta} \right\} \cap \mathcal{H}_k \right) \, \cdot \,f_{\vec{\Theta}} \left( \vec{\theta} \; \middle| \; \mathcal{H}_k \right)}{f_{\vec{D}} \left( \vec{d} \; \middle| \; \mathcal{H}_k \right)}](/images/eqn_bayes-thm-densities.png)
