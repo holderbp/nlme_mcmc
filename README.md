@@ -50,87 +50,15 @@ which we will write in shorthand as:
 ![f\left(\vec{\theta} \; \middle| \;  \vec{d}, \mathcal{H} \right)  = \frac{f \left( \vec{d} \; \middle| \;  \vec{\theta},  \mathcal{H} \right) \, \cdot \,f \left( \vec{\theta} \; \middle| \; \mathcal{H} \right)}{f \left( \vec{d} \; \middle| \; \mathcal{H} \right)}](/images/eqn_bayes-thm-densities_simplified.png)
 where the left-hand side is the *posterior density* of the parameters, the numerator on the right-hand side is the *likelihood function* of the parameters multiplied by the *prior density* of the parameters, and the denominator on the right-hand side is the *marginal likelihood* (of the model hypothesis).
 
-   For a Bayesian hierarchical model, we assume that the
-   joint prior distribution of the individual-pop and the
-   population-distribution parameters should be written in terms
-   of a conditional density
-
-      f(I_pop, Pop) = f(I_pop | Pop) * f(Pop)
-
-   so we must specify:
-
-      * a distribution for the conditional density, e.g.,
-        I_pop is normally-distributed over the population.
-
-      * a prior distribution for each of the Pop pars
-        specifying that distribution
-
-   Generally we consider the priors of the "Other" and the
-   "I_nopop" parameters are independent, such that the full
-   joint prior is written:
-
-    f(Other, I_nopop, I_pop, Pop) =
-
-               f(Other) * f(I_nopop) * f(I_pop, Pop)
-
-   where the priors for Other and I_nopop pars must also be
-   specified.
-
-   This code, "mcmc_mixed-effects.py", is a wrapper for the
-   emcee module, and runs MCMC chains until convergence is
-   achieved.  Along the way, it provides the user with relevant
-   convergence statistics, and it outputs regularly the current
-   best samples, posterior estimates, and marginal likelihood
-   estimates.
-
-   This main code assumes the existence of a data "project"
-   module, e.g., "data_hiv-tcell.py", which can provide data
-   sets for a multiple possible "data analysis" sub-projects
-   (e.g., for data_hiv-tcell.py, we can look at just virus-decay,
-   just timeseries, timeseries+virus-dilution, all-exper, ...).
-   The data module is loaded by the model hypothesis module
-   (see below) and provides the log-likelihood function.
-
-   For each "data analysis" sub-project, there can be multiple
-   "model hypotheses", one of which is imported here as a module.
-   The model hypothesis module provides the log-posterior for a
-   given data-project/data-analysis/model-hypothesis choice. It
-   also provides the individual log-prior and log-likelihood values
-   that go into that sum, which are saved as blobs by emcee.
-
-   The comparison of different model hypotheses for a given data
-   analysis sub-project is done by ranking the marginal
-   likelihoods (ML) of each (or finding the Bayes factor comparing
-   two hypotheses).  Marginal likelihood, as estimated by MCMC
-   chains, is a very noisy quantity (even when using the Gelfand
-   & Dey method for "correcting" the "harmonic mean of the
-   likelihood" estimator) and should be estimated using (many
-   steps in) the tail of a long converged MCMC run (the data
-   and a plot for the ML are output regularly).
-
-
-  A model hypothesis module contains the specific method of
-  calculating the log-posterior, which is the sum of:
-
-     * conditional log-prior of the I_pop pars with respect
-       to the current population distribution
-     * log-prior for the Pop (pop dist) parameters
-     * log-prior for I_nopop parameters
-     * log-prior of any Other parameters
-
-  and
-
-     * the log-likelihood of the data given these parameters
-
-  It gets the log-likelihood calculation from the data module,
-  which depends on everything but the Pop parameters.
-
-  Model hypothesis modules are associated to a "data analysis
-  subproject" of a "data project", and should be named
-  accordingly, e.g.,
-
-     modhyp_<project>_<subproject>_<model-hypothesis>
-
+For a Bayesian hierarchical model, we assume that the joint prior distribution of the individual-pop and the population-distribution parameters should be written in terms of a conditional density:
+![f\left({\rm INDIV\_POP},  {\rm POP} \; \middle| \;  H \right) = f\left({\rm INDIV\_POP}  \; \middle| \;  {\rm POP} , H \right) \, \cdot \, f\left({\rm POP}  \; \middle| \;  H \right)](/images/eqn_joint-prior.png)
+in other words, our assumption that the INDIV_POP parameters are drawn from a distribution over the population is encoded in the prior.  So, we must specify:
+* a distribution for the conditional density, for instance, INDIV_POP(s) are normally-distributed over the population.
+* a prior distribution for each of the POP parameters specifying that distribution.
+Here, we will consider the priors of the OTHER and INDIV_NOPOP parameters to be independent such that the full joint prior is written:
+![f\left(\theta \; \middle| \; H \right) &= f\left({\rm INDIV\_POP},  {\rm POP}, {\rm INDIV\_NOPOP}, {\rm OTHER} \right) \\
+& =  f\left({\rm INDIV\_POP},  {\rm POP}\right) \, \cdot \, f\left({\rm INDIV\_NOPOP}, {\rm OTHER} \right)](/images/eqn_joint-prior-full.png)
+where the priors for the OTHER and INDIV_NOPOP parameters must be specified.
 
 ## How to create a new project
 
