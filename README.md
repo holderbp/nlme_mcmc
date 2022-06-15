@@ -11,6 +11,8 @@ Sections below:
 
 3. [How to create a new project](#how-to-create-a-new-project)
 
+4. [Example projects](#example-projects)
+
 ## Theoretical background and implementation of Mixed-Effect Models
 
 A mixed-effects statistical model (or, in Bayesian language, a Bayesian Hierarchical Model) is applied to datasets where the responses of multiple "individuals" have been measured.  Instead of assuming that all explanatory parameters for the responses of different individuals are independent, one assumes that some are random variables drawn from a (as yet unknown) distribution over the population of all individuals.  
@@ -114,3 +116,8 @@ The following three template modules must be edited by the user when creating a 
 6. Edit the `evolvemodel` module:
     * For every evolvemodel specified within the data module, create a method that takes independent values `X` and returns a dictionary of numpy arrays with keys the y_types.
 
+## Example projects
+
+1. Sleepstudy
+
+2. HIV-Tcell
