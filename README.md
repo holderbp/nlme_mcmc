@@ -13,18 +13,18 @@ Sections below:
 
 ## Theoretical background and implementation of Mixed-Effect Models
 
-A mixed-effects statistical model (or, in Bayesian language, a Bayesian Hierarchical Model) is applied to datasets where the responses of multiple "individuals" has been measured.  Instead of assuming that all explanatory parameters for the responses of different individuals are independent, one assumes that some are random variables drawn from a (as yet unknown) distribution over the population of all individuals.  
+A mixed-effects statistical model (or, in Bayesian language, a Bayesian Hierarchical Model) is applied to datasets where the responses of multiple "individuals" have been measured.  Instead of assuming that all explanatory parameters for the responses of different individuals are independent, one assumes that some are random variables drawn from a (as yet unknown) distribution over the population of all individuals.  
 
 Bayesian inference for a mixed-effects model follows the standard inference protocol (i.e., applying Bayes Theorem for probability densities), but two implementation assumptions are made:
 * the prior density for a parameter that is assumed to be drawn from a population distribution is expressed in terms of its conditional prior with respect to that distribution, and
-* the likelihood function is assumed to be independent of the parameters associated to those population distributions.
+* the likelihood function is assumed to be independent of the parameters that specify those population distributions.
 
 To implement this, we allow for four types of parameters:
 
-* INDIV_POP: Individual-specific parameters that are assumed to be drawn from a distribution over the population of individuals. In a standard mixed-effects model, these are the "random effects" (although often only the deviation from the population mean is called a random effect).
-* INDIV_NOPOP: Individual-specific parameters, but without any assumption of being drawn from a distribution.
-* POP: Parameters associated to specifying the population distribution(s).
-* OTHER: Other parameters, for example those that are assumed to have a common value for all individuals, or those specifying the error-model for the calculation of log-likelihood.
+* `indiv_pop`: Individual-specific parameters that are assumed to be drawn from a distribution over the population of individuals. In a standard mixed-effects model, these are the "random effects" (although often only the deviation from the population mean is called a random effect).
+* `indiv_nopop`: Individual-specific parameters, but without any assumption of being drawn from a distribution.
+* `pop`: Parameters associated to specifying the population distribution(s).
+* `other`: Other parameters, for example those that are assumed to have a common value for all individuals, or those specifying the error-model for the calculation of log-likelihood.
 
 Bayes theorem for densities (for a particular data set, *d*, a particular chosen model hypothesis, *Hk*, and associated parameters, *theta*) is:
 
@@ -36,22 +36,22 @@ which we can write in shorthand as:
 
 where the left-hand side is the *posterior density* of the parameters, the numerator on the right-hand side is the *likelihood function* of the parameters multiplied by the (joint) *prior density* of the parameters, and the denominator on the right-hand side is the *marginal likelihood* (of the model hypothesis).
 
-For a Bayesian hierarchical model, we assume that the joint prior distribution of the INDIV_POP and the POP parameters should be written in terms of a conditional density:
+For a Bayesian hierarchical model, we assume that the joint prior distribution of the `indiv_pop` and the `pop` parameters should be written in terms of a conditional density:
 
 ![ f\left({\rm INDIV\_POP},  {\rm POP} \right) =  f\left({\rm INDIV\_POP} \; \middle| \;  {\rm POP} \right) \, \cdot \,  f\left({\rm POP} \right)](/images/eqn_joint-prior.png)
 
-in other words, our assumption that the INDIV_POP parameters are drawn from a distribution over the population is encoded in the prior.  So, we must specify:
+in other words, our assumption that the `indiv_pop` parameters are drawn from a distribution over the population is encoded in the prior.  So, we must specify:
 
-* a functional form for the conditional prior density, i.e., the population distribution's type (e.g., INDIV_POP(s) are normally-distributed about some population mean)
+* a functional form for the conditional prior density, i.e., the population distribution's type (e.g., `indiv_pop`(s) are normally-distributed about some population mean)
 
-* a prior density for each of the POP parameters specifying that distribution.
+* a prior density for each of the `pop` parameters specifying that distribution.
 
-Here, we will consider the priors of the OTHER and INDIV_NOPOP parameters to be independent such that the full joint prior is written:
+Here, we will consider the priors of the `other` and `indiv_nopop` parameters to be independent such that the full joint prior is written:
 
 ![f\left(\theta \; \middle| \; H \right) &= f\left({\rm INDIV\_POP},  {\rm POP}, {\rm INDIV\_NOPOP}, {\rm OTHER} \right) \\
 & =  f\left({\rm INDIV\_POP},  {\rm POP}\right) \, \cdot \, f\left({\rm INDIV\_NOPOP}, {\rm OTHER} \right)](/images/eqn_joint-prior-full.png)
 
-where the priors for the OTHER and INDIV_NOPOP parameters must be specified.
+where the priors for the `other` and `indiv_nopop` parameters must be specified.
 
 ## Overview of files
 
@@ -69,8 +69,8 @@ The following three template modules must be edited by the user when creating a 
 
 * `module_<projectname>_modhyp_<subprojectname>_<modhypname>.py` --- Imported by the `mixed-effects_mcmc.py` main script and provides a public method for getting the current value of the log-posterior density. Thus, this module organizes the parameters, specifies the likelihood function and prior density, and the handles the data sets provided by the data module for a chosen "sub-project".  Specifically, the module:
     * Initializes the data module, identifying the "data analysis sub-project" to be analyzed.
-    * Specifies the parameters to be tracked under Bayesian inference, separating them into three categories: INDIV_POP (individual-specific parameters assumed arise from a distribution over the population), INDIV_NOPOP (individual-specific parameters not controlled by a population distribution), POP (parameters specifying the population distribution for each parameter in INDIV_POP), OTHER (e.g., parameters associated to the error model, common parameters for all individuals).
-    * Specifies the prior density for each of the INDIV_NOPOP, POP, and OTHER parameters (the prior for each INDIV_POP parameter is a conditional prior with respect to the POP distribution and is calculated automatically --- this is the essence of a Bayesian Hierarchical model; see below in the Theoretical/Implementation section).
+    * Specifies the parameters to be tracked under Bayesian inference, separating them into three categories: `indiv_pop` (individual-specific parameters assumed arise from a distribution over the population), `indiv_nopop` (individual-specific parameters not controlled by a population distribution), `pop` (parameters specifying the population distribution for each parameter in `indiv_pop`), `other` (e.g., parameters associated to the error model, common parameters for all individuals).
+    * Specifies the prior density for each of the `indiv_nopop`, `pop`, and `other` parameters (the prior for each `indiv_pop` parameter is a conditional prior with respect to the `pop` distribution and is calculated automatically --- this is the essence of a Bayesian Hierarchical model; see below in the Theoretical/Implementation section).
     * Specifies the likelihood function, in particular the error model to be used (which is potentially different for different data sets within the data analysis sub-project).
     
   For any data analysis subproject, a user will likely create multiple "modhyp" modules, each specifying a different statistical model hypothesis, which can be compared/ranked for parsimony by their marginal likelihood.
