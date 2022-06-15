@@ -91,7 +91,20 @@ where the priors for the OTHER and INDIV_NOPOP parameters must be specified.
     * Set `project_name` to \<*projectname*\>
     * Specify the filename for import in `data_file`
     * Identify the list of data-sets created by each evolve-model and the inverse mapping (evolve-model that creates a data-set) by editing the `data_sets` and `evolve_model` dictionaries within the `Data Handling` section.
-    * With the `prep_data()` method, manage the import of the raw data file into a dataframe of standard form (with columns `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`
+    * Within the `prep_data()` method, manage the import of the raw data file into a dataframe of standard form (with columns `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`).
+        - do this
+	- and this
+    * Within the `plot_data()` method, establish a multi-page figure structure for each `data_analysis_subproject` choice.
+        - do this
+	- and this
+
+6. Edit the `evolvemodel` module:
+    * Within the `run_evolve_model(...)` method, assign an evolve-model run for each evolve-model name that has been identified in the `data` module.
+    * Add additional methods, or module imports (e.g., a module that brings in a system of ODEs), as needed to achieve these model evolutions.
+
+7. Edit the `modhyp` module:
+    * Assign the `data_analysis_subproject`, which must match one created within the `data` module.
+    * Place a short descriptive string for this statistical model hypothesis in `model_hyp`.  This will be used for naming output files.
     
     
 
