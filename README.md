@@ -90,13 +90,16 @@ The following three template modules must be edited by the user when creating a 
 5. Edit the `data` module:
     * Set `project_name` to \<*projectname*\>
     * Specify the filename for import in `data_file`
-    * Identify the list of data-sets simulated by each evolve-model and the inverse mapping (the evolve-model that creates the simulation that is compared to a data-set) by editing the `data_sets` and `evolve_model` dictionaries within the `Data Handling` section.  These mappings allow for the data to be compared to the model within the likelihood function, for a very general collection of data sets and models.
-    * Within the `prep_data()` method, manage the import of the raw data file into a dataframe of standard form (with columns `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`).
-        - do this
-        - and this
+    * Identify the list of data-sets simulated by each evolve-model and its inverse mapping (the evolve-model that creates the simulation that is compared to a data-set) by editing the `data_sets` and `evolve_model` dictionaries within the `Data Handling` section.  These mappings allow for the data to be compared to the model within the likelihood function, for a very general collection of data sets and models.
+    * Within the `prep_data()` method, manage the import of the raw data file into a dataframe of standard form, and specify the data sets associated each `data_analysis_subproject`
+        - Adjust the import of the raw data file creating a dataframe with these columns: `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`.
+        - Assign descriptive labels for each data set in the `data_set` column.
+        - Perform any necessary clean-up of the data file
+        - Specify which data sets are to be selected for each `data_analysis_subproject`.
     * Within the `plot_data()` method, establish a multi-page figure structure for each `data_analysis_subproject` choice.
-        - do this
-        - and this
+        - Decide the logic of plotting (how many subplots on each page, which individual's data is plotted where) and create separate figures for each page (`fig1`, `fig2`, etc).
+        - Specify the plotting of the data sets into the subplots of these figures.
+	- Fill in the dictionary `theaxis` to specify which `[individual][evolve-model][data-set]` is assigned to which axis.  This will allow the associated models to be automatically plotted into the correct subplots.
 
 6. Edit the `evolvemodel` module:
     * Within the `run_evolve_model(...)` method, assign an evolve-model run for each evolve-model name that has been identified in the `data` module.
