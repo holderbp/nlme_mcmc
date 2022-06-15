@@ -99,7 +99,7 @@ The following three template modules must be edited by the user when creating a 
     * Within the `plot_data()` method, establish a multi-page figure structure for each `data_analysis_subproject` choice.
         - Decide the logic of plotting (how many subplots on each page, which individual's data is plotted where) and create separate figures for each page (`fig1`, `fig2`, etc).
         - Specify the plotting of the data sets into the subplots of these figures.
-        - Fill in the dictionary `theaxis` to specify which `[individual][evolve-model][data-set]` is assigned to which axis.  This will allow the associated models to be automatically plotted into the correct subplots.
+        - Fill in the dictionary `theaxis` to specify which `[individual][evolve-model][data-set]` is assigned to which axis.  This will allow the associated evolve-model outputs to be automatically plotted into the correct subplots.
 
 6. Edit the `evolvemodel` module:
     * Within the `run_evolve_model(...)` method, assign an evolve-model run for each evolve-model name that has been identified in the `data` module.
