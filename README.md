@@ -19,7 +19,7 @@ Bayesian inference for a mixed-effects model follows the standard inference prot
 * the prior density for a parameter that is assumed to be drawn from a population distribution is expressed in terms of its conditional prior with respect to that distribution, and
 * the likelihood function is assumed to be independent of the parameters that specify those population distributions.
 
-To implement this, we allow for four types of parameters:
+To implement this, we allow for four types of parameters, stored in the following variables:
 
 * `indiv_pop`: Individual-specific parameters that are assumed to be drawn from a distribution over the population of individuals. In a standard mixed-effects model, these are the "random effects" (although often only the deviation from the population mean is called a random effect). [Implemented as a pandas dataframe indexed by individuals, with columns labeled by parameter name.]
 * `indiv_nopop`: Individual-specific parameters, but without any assumption of being drawn from a distribution. [Implemented as a pandas dataframe indexed by individuals, with columns labeled by parameter name.]
