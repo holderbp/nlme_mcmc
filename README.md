@@ -43,7 +43,7 @@ Bayesian inference for a mixed-effects model follows the standard inference prot
 * the prior density for a parameter that is assumed to be drawn from a population distribution is expressed in terms of its conditional prior with respect to that distribution, and
 * the likelihood function is assumed to be independent of the parameters associated to those population distributions.
 
-To implement this, we assume four types of parameters:
+To implement this, we allow for four types of parameters:
 
 * INDIV_POP: Individual-specific parameters that are assumed to be drawn from a distribution over the population of individuals. In a standard mixed-effects model, these are the "random effects" (although often only the deviation from the population mean is called a random effect).
 * INDIV_NOPOP: Individual-specific parameters, but without any assumption of being drawn from a distribution.
@@ -58,7 +58,7 @@ which we can write in shorthand as:
 
 ![f\left(\vec{\theta} \; \middle| \;  \vec{d}, \mathcal{H} \right)  = \frac{f \left( \vec{d} \; \middle| \;  \vec{\theta},  \mathcal{H} \right) \, \cdot \,f \left( \vec{\theta} \; \middle| \; \mathcal{H} \right)}{f \left( \vec{d} \; \middle| \; \mathcal{H} \right)}](/images/eqn_bayes-thm-densities_simplified.png)
 
-where the left-hand side is the *posterior density* of the parameters, the numerator on the right-hand side is the *likelihood function* of the parameters multiplied by the *prior density* of the parameters, and the denominator on the right-hand side is the *marginal likelihood* (of the model hypothesis).
+where the left-hand side is the *posterior density* of the parameters, the numerator on the right-hand side is the *likelihood function* of the parameters multiplied by the (joint) *prior density* of the parameters, and the denominator on the right-hand side is the *marginal likelihood* (of the model hypothesis).
 
 For a Bayesian hierarchical model, we assume that the joint prior distribution of the INDIV_POP and the POP parameters should be written in terms of a conditional density:
 
@@ -81,16 +81,19 @@ where the priors for the OTHER and INDIV_NOPOP parameters must be specified.
 
 1. Create a new directory called \<*projectname*\> within the `projects` directory.
 
-2. Copy the static module files (first three listed in the previous section) into this new directory.
+2. Copy the static module files (the first three files listed in the first section) into this new directory.
 
 3. Copy the `data`, `modhyp`, and `evolvemodel` template modules into the new directory, replacing \<*projectname*\>, \<*subprojectname*\>, and \<*modhypname*\> with descriptive names for the project (the larger dataset), the data analysis subproject (the particular subset of the larger project dataset to be considered now), and the statistical model hypothesis (what choices are being made about the parameters to be inferred).  Later, different model hypotheses (and different data analysis sub-projects) can be considered by creating new versions of the `modhyp` module.
 
 4. Create subdirectories within the new project directory: `plots`, `output`, `logfiles`, and `data`.  Place the raw project data file within `data`.
 
-4. Edit the `data` module:
-    * Specify the filename for import
-    * 
+5. Edit the `data` module:
+    * Set `project_name` to \<*projectname*\>
+    * Specify the filename for import in `data_file`
+    * Identify the list of data-sets created by each evolve-model and the inverse mapping (evolve-model that creates a data-set) by editing the `data_sets` and `evolve_model` dictionaries within the `Data Handling` section.
+    
+    
 
-5. Edit the `evolvemodel` module:
+6. Edit the `evolvemodel` module:
     * For every evolvemodel specified within the data module, create a method that takes independent values `X` and returns a dictionary of numpy arrays with keys the y_types.
 
