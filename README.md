@@ -7,7 +7,7 @@ Sections below:
 
 1. [Overview of files](#overview-of-files)
 
-2. [Theoretical background and implementation of Mixed-Effect/Bayesian-Hierarchical Models](#theoretical-background-and-implementation-of-mixed-effect/bayesian-hierarchical-models)
+2. [Theoretical background and implementation of Mixed-Effect/Bayesian-Hierarchical Models](#theoretical-background-and-implementation-of-mixed-effect)
 
 3. [How to create a new project](#how-to-create-a-new-project)
 
