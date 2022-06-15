@@ -21,10 +21,10 @@ Bayesian inference for a mixed-effects model follows the standard inference prot
 
 To implement this, we allow for four types of parameters:
 
-* `indiv_pop`: Individual-specific parameters that are assumed to be drawn from a distribution over the population of individuals. In a standard mixed-effects model, these are the "random effects" (although often only the deviation from the population mean is called a random effect).
-* `indiv_nopop`: Individual-specific parameters, but without any assumption of being drawn from a distribution.
-* `pop`: Parameters associated to specifying the population distribution(s).
-* `other`: Other parameters, for example those that are assumed to have a common value for all individuals, or those specifying the error-model for the calculation of log-likelihood.
+* `indiv_pop`: Individual-specific parameters that are assumed to be drawn from a distribution over the population of individuals. In a standard mixed-effects model, these are the "random effects" (although often only the deviation from the population mean is called a random effect). [Implemented as a pandas dataframe indexed by individuals, with columns labeled by parameter name.]
+* `indiv_nopop`: Individual-specific parameters, but without any assumption of being drawn from a distribution. [Implemented as a pandas dataframe indexed by individuals, with columns labeled by parameter name.]
+* `pop`: Parameters associated to specifying the population distribution(s). [Implemented as a dictionary, with parameter names as keys.]
+* `other`: Other parameters, for example those that are assumed to have a common value for all individuals, or those specifying the error-model for the calculation of log-likelihood. [Implemented as a dictionary, with parameter names as keys.]
 
 Bayes theorem for densities (for a particular data set, *d*, a particular chosen model hypothesis, *Hk*, and associated parameters, *theta*) is:
 
