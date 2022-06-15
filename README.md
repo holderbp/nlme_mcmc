@@ -48,8 +48,8 @@ in other words, our assumption that the `indiv_pop` parameters are drawn from a 
 
 Here, we will consider the priors of the `other` and `indiv_nopop` parameters to be independent such that the full joint prior is written:
 
-![f\left(\theta \; \middle| \; H \right) &= f\left({\rm INDIV\_POP},  {\rm POP}, {\rm INDIV\_NOPOP}, {\rm OTHER} \right) \\
-& =  f\left({\rm INDIV\_POP},  {\rm POP}\right) \, \cdot \, f\left({\rm INDIV\_NOPOP}, {\rm OTHER} \right)](/images/eqn_joint-prior-full.png)
+![f\left(\theta \; \middle| \; H \right) &= f\left({\rm indiv\_pop},  {\rm pop}, {\rm indiv\_nopop}, {\rm other} \right) \\
+& =  f\left({\rm indiv\_pop},  {\rm pop}\right) \, \cdot \, f\left({\rm indiv\_nopop}, {\rm other} \right)](/images/eqn_joint-prior-full.png)
 
 where the priors for the `other` and `indiv_nopop` parameters must be specified.
 
