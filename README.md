@@ -42,11 +42,11 @@ For a Bayesian hierarchical model, we assume that the joint prior distribution o
 
 in other words, our assumption that the `indiv_pop` parameters are drawn from a distribution over the population is encoded in the prior.  So, we must specify:
 
-* a functional form for the conditional prior density, i.e., the population distribution's type (e.g., `indiv_pop`(s) are normally-distributed about some population mean)
+* a functional form for the conditional prior density, i.e., the population distribution's type (e.g., `indiv_pop`(s) are normally-distributed about some population mean), and
 
 * a prior density for each of the `pop` parameters specifying that distribution.
 
-Here, we will consider the priors of the `other` and `indiv_nopop` parameters to be independent such that the full joint prior is written:
+Currently, the implentation considers the priors of the `other` and `indiv_nopop` parameters to be independent such that the full joint prior is written:
 
 ![f\left(\theta \; \middle| \; H \right) &= f\left({\rm indiv\_pop},  {\rm pop}, {\rm indiv\_nopop}, {\rm other} \right) \\
 & =  f\left({\rm indiv\_pop},  {\rm pop}\right) \, \cdot \, f\left({\rm indiv\_nopop}, {\rm other} \right)](/images/eqn_joint-prior-full.png)
