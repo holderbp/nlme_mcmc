@@ -7,7 +7,7 @@ Sections below:
 
 1. [Overview of files](#overview-of-files)
 
-2. [Theoretical background and implementation of Bayesian Hierarchical Models](#theoretical-background-and-implementation-of-bayesian-hierarchical-models)
+2. [Theoretical background and implementation of Mixed-Effect/Bayesian-Hierarchical Models](#theoretical-background-and-implementation-of-mixed-effect/bayesian-hierarchical-models)
 
 3. [How to create a new project](#how-to-create-a-new-project)
 
@@ -28,14 +28,14 @@ The following three template modules must be edited by the user when creating a 
 * `module_<projectname>_modhyp_<subprojectname>_<modhypname>.py` --- Imported by the `mixed-effects_mcmc.py` main script and provides a public method for getting the current value of the log-posterior density. Thus, this module organizes the parameters, specifies the likelihood function and prior density, and the handles the data sets provided by the data module for a chosen "sub-project".  Specifically, the module:
     * Initializes the data module, identifying the "data analysis sub-project" to be analyzed.
     * Specifies the parameters to be tracked under Bayesian inference, separating them into three categories: INDIV_POP (individual-specific parameters assumed arise from a distribution over the population), INDIV_NOPOP (individual-specific parameters not controlled by a population distribution), POP (parameters specifying the population distribution for each parameter in INDIV_POP), OTHER (e.g., parameters associated to the error model, common parameters for all individuals).
-    * Specifies the prior density for each of the INDIV_NOPOP, POP, and OTHER parameters (the priors for each INDIV_POP parameter is a conditional prior with respect to the POP distribution and is calculated automatically --- this is the essence of a Bayesian Hierarchical model; see below in the Theoretical/Implementation section).
+    * Specifies the prior density for each of the INDIV_NOPOP, POP, and OTHER parameters (the prior for each INDIV_POP parameter is a conditional prior with respect to the POP distribution and is calculated automatically --- this is the essence of a Bayesian Hierarchical model; see below in the Theoretical/Implementation section).
     * Specifies the likelihood function, in particular the error model to be used (which is potentially different for different data sets within the data analysis sub-project).
     
   For any data analysis subproject, a user will likely create multiple "modhyp" modules, each specifying a different statistical model hypothesis, which can be compared/ranked for parsimony by their marginal likelihood.
 
 * `module_<projectname>_evolvemodel.py` --- Contains all dynamical models necessary for generating simulations to be compared to all data sets in the project (comparison occurs within the likelihood function for a particular sub-project + model-hypothesis choice). A single evolve-model might produce multiple "y-types" of output that can be compared to multiple different data sets. The data module provides the structure for --- and the model-hyp module executes --- evolving the necessary evolve-models for the data sets within a chosen data analysis sub-project.
 
-## Theoretical background and implementation of Bayesian Hierarchical Models
+## Theoretical background and implementation of Mixed-Effect/Bayesian-Hierarchical Models
 
 A mixed-effects statistical model (or, in Bayesian language, a Bayesian Hierarchical Model) is applied to datasets where the responses of multiple "individuals" has been measured.  Instead of assuming that all explanatory parameters for the responses of different individuals are independent, one assumes that some are random variables drawn from a (as yet unknown) distribution over the population of all individuals.  
 
