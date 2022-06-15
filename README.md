@@ -91,7 +91,7 @@ The following three template modules must be edited by the user when creating a 
     * Set `project_name` to \<*projectname*\>
     * Specify the filename for import in `data_file`
     * Identify the list of data-sets simulated by each evolve-model and its inverse mapping (the evolve-model that creates the simulation that is compared to a data-set) by editing the `data_sets` and `evolve_model` dictionaries within the `Data Handling` section.  These mappings allow for the data to be compared to the model within the likelihood function, for a very general collection of data sets and models.
-    * Within the `prep_data()` method, manage the import of the raw data file into a dataframe of standard form, and specify the data sets associated each `data_analysis_subproject`
+    * Within the `prep_data()` method, manage the import of the raw data file into a dataframe of standard form, and define multiple `data_analysis_subproject`(s):
         - Adjust the import of the raw data file creating a dataframe with these columns: `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`.
         - Assign descriptive labels for each data set in the `'data_set'` column.
         - Perform any necessary clean-up of the data file
