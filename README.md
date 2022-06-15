@@ -91,6 +91,7 @@ where the priors for the OTHER and INDIV_NOPOP parameters must be specified.
     * Set `project_name` to \<*projectname*\>
     * Specify the filename for import in `data_file`
     * Identify the list of data-sets created by each evolve-model and the inverse mapping (evolve-model that creates a data-set) by editing the `data_sets` and `evolve_model` dictionaries within the `Data Handling` section.
+    * With the `prep_data()` method, manage the import of the raw data file into a dataframe of standard form (with columns `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`
     
     
 
