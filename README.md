@@ -81,7 +81,7 @@ The following three template modules must be edited by the user when creating a 
 
 1. Create a new directory called \<*projectname*\> within the `projects` directory.
 
-2. Copy the static module files (the first three files listed in the first section) into this new directory.
+2. Copy the static module files (the first three files listed in the previous section) into this new directory.
 
 3. Copy the `data`, `modhyp`, and `evolvemodel` template modules into the new directory, replacing \<*projectname*\>, \<*subprojectname*\>, and \<*modhypname*\> with descriptive names for the project (the larger dataset), the data analysis subproject (the particular subset of the larger project dataset to be considered now), and the statistical model hypothesis (what choices are being made about the parameters to be inferred).  Later, different model hypotheses (and different data analysis sub-projects) can be considered by creating new versions of the `modhyp` module.
 
@@ -90,7 +90,7 @@ The following three template modules must be edited by the user when creating a 
 5. Edit the `data` module:
     * Set `project_name` to \<*projectname*\>
     * Specify the filename for import in `data_file`
-    * Identify the list of data-sets created by each evolve-model and the inverse mapping (evolve-model that creates a data-set) by editing the `data_sets` and `evolve_model` dictionaries within the `Data Handling` section.
+    * Identify the list of data-sets simulated by each evolve-model and the inverse mapping (the evolve-model that creates the simulation that is compared to a data-set) by editing the `data_sets` and `evolve_model` dictionaries within the `Data Handling` section.  These mappings allow for the data to be compared to the model within the likelihood function, for a very general collection of data sets and models.
     * Within the `prep_data()` method, manage the import of the raw data file into a dataframe of standard form (with columns `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`).
         - do this
         - and this
