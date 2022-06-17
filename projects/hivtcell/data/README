@@ -1,0 +1,92 @@
+
+2022-06-15
+
+ * copied over from projects/.../2022-02-05
+ * combined the "all_*" data csv files for all cells into one "hivtcell_alldata.csv"
+ * made sure the donor names were unique (instead of "UNK", UNK1-UNK20)
+
+2022-02-05  (Completed 2022-05-23)
+
+For the new analysis, I'm gathering all of the data sets here, in the
+"individual-experiments" subdirectory, including (see 2017-05-07 notes
+for summary, 2017-02-01 notes, and Andings Kinetics.xlsx files):
+
+(3) trials TIMESERIES_UNINF and TIMESERIES_INF
+   - experiments performed: 2015-07-01, 2015-07-24, 2015-08-02
+   - trial names: 1, 2, 3
+   - donors: 43A (8A for ACT), 8B, 43B
+   - virus: 2014-07-19, 2014-07-19, 2015-07-15
+   - inoc volume: 20uL, 20uL, 50uL
+   - indep var values (sacrif times): [
+   - analysis: 2015-07-02, 2015-07-28, 2015-08-03
+
+(2) trials VIRUS_DILUTION for ACT/ECx
+   - experiments performed: 2015-06-11, 2015-06-17
+   - trial names: 1, 2
+   - donors: 36A, 40A
+   - virus: 2015-06-01, 2015-06-01
+   - inoc volumes: [1.25uL, 2.5, 5.0, 10.0, 20.0, 40.0]
+   - independent var values (inoc volumes): see above
+   - analysis: 2015-06-11, 2015-06-18
+
+(3) trials VIRUS_DILUTION for REST
+   - experiments performed: 2015-06-27, 2015-07-01
+   - trial names: 1, 2, 3
+   - donors: 13A, 41A, 43C
+   - virus: 2015-06-01, 2015-06-01, 2015-06-01
+   - inoc volumes: [1.25uL, 2.5, 5.0, 10.0, 20.0, 40.0]
+   - independent var values (inoc volumes): see above   
+   - analysis: 2015-06-28, 2015-07-05, 2015-07-05
+
+(2) trials VIRUS_DECAY
+   - experiments performed: 2015-07-08, 2015-07-21
+   - trial names: 1, 2
+   - donors: 38A, 32A
+   - virus: 2015-06-22, 2015-06-22
+   - inoc volumes: 10uL, 10uL
+   - indep var values (incub times): [
+   - analysis: 2015-07-08b, 2015-07-21
+
+(3) trials DRUGSTOPPING_EFAV (reverse-transcription inhibitor)
+   - experiments performed: 2013-07-16, 2013-08-01, 2013-08-08
+   - trial names: 1, 2, 3
+   - donors: <unkown>
+   - virus: <unknown>
+   - inoc volumes: 50uL      
+   - inoc volumes: <unknown>
+   - indep var values (drug inoc times, d):
+       [0, 0.5, 1, 2, 3, 4, 6]  (16Jul all) (1Aug ACT) (8Aug ACT)
+       [0, 1, 2, 3, 4, 5, 6]  (1Aug REST and ECx) (8Aug REST and ECx)
+   - analysis: 2018-01-05 (first done 2015-07-12, and summer 2014)
+
+(2) trials DRUGSTOPPING_RALT (integration inhibitor)
+   - experiments performed: 2013-06-26, 2013-07-02
+   - trial names: 1, 2, 3
+   - donors: <unkown>
+   - virus: <unknown>
+   - inoc volumes: 50uL   
+   - indep var values (drug inoc times, d):  [0, 1, 2, 3, 4, 5, 6]  (all)       
+   - analysis: 2018-01-05 (first done 2015-07-12, and summer 2014)
+
+where, recall, that initial virus concentration [V] in terms of the
+virus inoculation volume, v, is:
+
+[V] = v / (300uL + v)
+
+and the inoculation is followed 24h later by a dilution of 1mL medium,
+so I must let (approximately) V -> V/4 at that time.
+
+The "individual-data" directories contain directories for the raw
+counts after running my flow cytometry gating script, and thel
+
+And then I am creating a spreadsheet containing all data:
+
+hiv_tcells_all-data.xlsx
+
+and its individual sheets
+
+hiv_tcells_all-data_ACT.csv
+hiv_tcells_all-data_REST.csv
+hiv_tcells_all-data_ECp.csv
+hiv_tcells_all-data_ECm.csv
+
