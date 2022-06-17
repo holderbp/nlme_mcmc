@@ -138,9 +138,9 @@ The following three template modules must be edited by the user when creating a 
     
     * Create a short descriptive string for this statistical model hypothesis in `model_hyp`.  This will be used for naming output files.
 
-    * Within the `INDIV_POP` and `INDIV_NOPOP` sections (`x` = `POP` or `NOPOP`):
+    * Within the `INDIV_POP` and `INDIV_NOPOP` sections:
 
-        * Specify an ordered list of parameters in `mm.list_indiv_x_pars`, which will be the column names for the dataframe.
+        * Specify an ordered list of parameters in `mm.list_indiv_x_pars` (`x` = `POP` or `NOPOP`), which will be the column names for the dataframe.
 
         * Give a descriptive name for each parameter as an entry in the `mm.descrip_name` dictionary.
 
