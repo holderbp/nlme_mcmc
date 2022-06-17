@@ -104,7 +104,6 @@ The following three template modules must be edited by the user when creating a 
         - Adjust the import of the raw data file creating a dataframe with these columns: `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`.
 
         - Assign descriptive labels for each data set in the `'data_set'` column.
-
         - Perform any necessary clean-up of the data file
 	
         - Specify which data sets are to be selected for each `data_analysis_subproject`.
