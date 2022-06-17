@@ -140,7 +140,7 @@ The following three template modules must be edited by the user when creating a 
 
     * Within the `INDIV_POP` and `INDIV_NOPOP` sections (`x` = `POP` or `NOPOP`):
 
-        * Specify an ordered list of `indiv_x` parameters in `mm.list_indiv_x_pars`, which will be column names for the dataframe.
+        * Specify an ordered list of parameters in `mm.list_indiv_x_pars`, which will be column names for the dataframe.
 
         * Set a descriptive name for each parameter as an entry in the `mm.descrip_name` dictionary.
 
