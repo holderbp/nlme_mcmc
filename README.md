@@ -186,14 +186,14 @@ The following three template modules must be edited by the user when creating a 
     
     * Add additional methods, or module imports (e.g., a module that brings in a system of ODEs), as needed to achieve these model evolutions.
 
-8. Import the model-hypothesis module within `mixed-effects_mcmc.py` and then run it with
+8. Import the model-hypothesis module within `mixed-effects_mcmc.py` and then run it with:
 
    ```
    > conda activate stats           # if not already done
    stats > python mixed-effects_mcmc.py
    ```
 
-   or unattended
+   or, unattended as:
 
    ```
    > conda activate stats           # if not already done
