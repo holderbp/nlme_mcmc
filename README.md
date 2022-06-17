@@ -94,6 +94,7 @@ The following three template modules must be edited by the user when creating a 
     * Within `Data Handling`, specify:
         - `data_sets`: the list of data-sets (names to be specified in the next step) that are simulated by each evolve-model (names to be specified in the evolve-model module), and
         - `evolve_model`: the inverse mapping to `data_sets`, i.e., the evolve-model whose simulation is to be compared to a particular data-set.
+
       These mappings allow for the data to be compared to the model within the likelihood function, for a very general collection of data sets and models.
     * Within the `prep_data()` method, manage the import of the raw data file into a dataframe of standard form, and define multiple `data_analysis_subproject`(s):
         - Adjust the import of the raw data file creating a dataframe with these columns: `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`.
