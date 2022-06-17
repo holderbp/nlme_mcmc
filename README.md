@@ -100,10 +100,15 @@ The following three template modules must be edited by the user when creating a 
       These mappings allow for the data to be compared to the model within the likelihood function, for a very general collection of data sets and models.
       
     * Within the `prep_data()` method, manage the import of the raw data file into a dataframe of standard form, and define multiple `data_analysis_subproject`(s):
+
         - Adjust the import of the raw data file creating a dataframe with these columns: `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`.
+
         - Assign descriptive labels for each data set in the `'data_set'` column.
+
         - Perform any necessary clean-up of the data file
+	
         - Specify which data sets are to be selected for each `data_analysis_subproject`.
+
     * Within the `plot_data()` method, establish a multi-page figure structure for each `data_analysis_subproject` choice.
         - Decide the logic of plotting (how many subplots on each page, which individual's data is plotted where) and create separate figures for each page (`fig1`, `fig2`, etc).
         - Specify the plotting of the data sets into the subplots of these figures.
