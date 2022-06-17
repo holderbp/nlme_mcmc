@@ -60,7 +60,7 @@ where the priors for the `other` and `indiv_nopop` parameters must be specified.
 
 ## Overview of files
 
-The code is written in python3 and depends on the modules within the conda environment file stats.yml.  After installing, e.g. [miniconda](https://docs.conda.io/en/latest/miniconda.html), run:
+The code is written in python3 and depends on modules within the conda environment file `stats.yml`.  After installing, e.g. [miniconda](https://docs.conda.io/en/latest/miniconda.html), run:
 ```
 > conda env create -f stats.yml
 ...
