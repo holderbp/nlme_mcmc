@@ -18,8 +18,11 @@ Sections below:
 A mixed-effects statistical model (or, in Bayesian language, a Bayesian Hierarchical Model) is applied to datasets where the responses of multiple "individuals" have been measured.  Instead of assuming that all explanatory parameters for the responses of different individuals are independent, one assumes that some are random variables drawn from a (as yet unknown) distribution over the population of all individuals.  
 
 Bayesian inference for a mixed-effects model follows the standard inference protocol (i.e., applying Bayes Theorem for probability densities), but two implementation assumptions are made:
+
 * the prior density for a parameter that is assumed to be drawn from a population distribution is expressed in terms of its conditional prior with respect to that distribution (see below), and
 * the likelihood function is assumed to be independent of the parameters that specify those population distributions.
+
+See the discussion in Gelman and Carlin's *Bayesian Data Analysis* (3rd Ed, 2014), regarding "The full Bayesian treatment of the hierarchical model" (Chapter 5).
 
 To implement this, we allow for four types of parameters, stored in the following variables:
 
