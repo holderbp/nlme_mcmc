@@ -140,13 +140,35 @@ The following three template modules must be edited by the user when creating a 
 
     * Within the `INDIV_POP` and `INDIV_NOPOP` sections:
 
-        * Specify an ordered list of parameters in `mm.list_indiv_x_pars` (`x` = `pop` or `nopop`), which will be the column names for the dataframe.
+        - Specify an ordered list of parameters in `mm.list_indiv_x_pars` (`x` = `pop` or `nopop`), which will be the column names for the dataframe.
 
-        * Give a descriptive name for each parameter as an entry in the `mm.descrip_name` dictionary.
+        - Give a descriptive name for each parameter as an entry in the `mm.descrip_name` dictionary.
 
-        * Set the initial guess values of the parameters in the `indiv_x` dataframe, using the ordered list of individual names (specified in the data module) as an index.
+        - Set the initial guess values of the parameters in the `indiv_x` dataframe, using the ordered list of individual names (specified in the data module) as an index.
 
-        * If there are no parameters of this type, set `indiv_x` to an empty dataframe.
+        - If there are no parameters of this type, set `indiv_x` to an empty dataframe.
+
+    * Within the `POP` section:
+
+        - For each parameter `<par>` in `mm.list_indiv_pop_pars`:
+
+            * Set the distribution type in the `mm_pop_dist` dictionary.
+
+            * Set an initial guess values for the distribution parameters in the `pop` dictionary, using `mm.pop['<par>_mean']` and `mm.pop['<par>_stdev']` (normal/lognormal).
+
+            * Specify the prior information for both `'<par>_mean'` and `'<par>_stdev'`, using the dictionaries: `mm.prior_dist`; `mm.prior_mean` and `mm.prior_stdev` (normal priors); `mm.prior_min` and `mm.prior_max` (uniform prior).
+
+            * Specify the "transformations" of both `'<par>_mean'` and `'<par>_stdev'`, using the dictionaries: `mm.tranf_mcmc` (transformation of value while conducting mcmc, e.g., `'log'` if the parameter should be strictly positive); `mm.tranf_plot` (when making cornerplots of the posterior distribution); `mm.transf_print` (when printing the values for user/logfile).
+
+    * Within the `OTHER` section:
+
+        - Specify an ordered list of parameters in `mm.list_other_pars`.
+
+        - Give a descriptive name for each parameter as an entry in the `mm.descrip_name` dictionary.
+
+        - Set the initial guess value as an entry in the `mm.other` dictionary.
+
+        - Specify the prior and transformation information (as in `POP`, above) for each parameter.
 
 6. Edit the `evolvemodel` module:
 
