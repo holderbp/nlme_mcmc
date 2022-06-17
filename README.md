@@ -22,7 +22,7 @@ Bayesian inference for a mixed-effects model follows the standard inference prot
 * the prior density for a parameter that is assumed to be drawn from a population distribution is expressed in terms of its conditional prior with respect to that distribution (see below), and
 * the likelihood function is assumed to be independent of the parameters that specify those population distributions.
 
-See the discussion in Gelman and Carlin's *Bayesian Data Analysis* (3rd Ed, 2014), regarding "The full Bayesian treatment of the hierarchical model" (Chapter 5).
+See the discussion in Gelman and Carlin's [*Bayesian Data Analysis*](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) (3rd Ed, 2014), regarding "The full Bayesian treatment of the hierarchical model" (Chapter 5).
 
 To implement this, we allow for four types of parameters, stored in the following variables (defined in the model-hypothesis module, see *How to create a new project*, below):
 
