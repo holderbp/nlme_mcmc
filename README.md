@@ -174,7 +174,18 @@ The following three template modules must be edited by the user when creating a 
     
     * Add additional methods, or module imports (e.g., a module that brings in a system of ODEs), as needed to achieve these model evolutions.
 
-8. After analysis of a particular `data_analysis_subproject` with a particular `model_hyp`, create new model-hypothesis modules to test other model hypotheses, or move on to other subprojects.
+8. Import the model-hypothesis module within `mixed-effects_mcmc.py` and then run it with
+```
+> python mixed-effects_mcmc.py
+```
+or unattended
+```
+> at now
+./runit <optional-descrip-string-about-run>
+[Ctrl-d]
+```
+
+9. After analysis of a particular `data_analysis_subproject` with a particular `model_hyp`, create new model-hypothesis modules to test other model hypotheses, or move on to other subprojects.
 
 ## Example projects
 
