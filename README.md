@@ -199,6 +199,7 @@ The following three template modules must be edited by the user when creating a 
 
    ```
    > conda activate stats           # if not already done
+   > chmod u+x runit                # if not already executable
    stats > at now
    ./runit <descriptive-string-about-run>
    [Ctrl-d]
