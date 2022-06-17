@@ -154,7 +154,7 @@ The following three template modules must be edited by the user when creating a 
 
             * Set the distribution type in the `mm.pop_dist` dictionary.
 
-            * Set initial guess values for the distribution parameters in the `pop` dictionary, using `mm.pop['<par>_mean']` and `mm.pop['<par>_stdev']` (normal/lognormal).
+            * Set initial guess values for the distribution parameters in the `pop` dictionary, using the keys `mm.pop['<par>_mean']` and `mm.pop['<par>_stdev']` (normal/lognormal distribution).
 
             * Specify the prior information for both `'<par>_mean'` and `'<par>_stdev'`, using the dictionaries: `mm.prior_dist`; `mm.prior_mean` and `mm.prior_stdev` (normal priors); `mm.prior_min` and `mm.prior_max` (uniform prior).
 
