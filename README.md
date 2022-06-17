@@ -59,14 +59,14 @@ where the priors for the `other` and `indiv_nopop` parameters must be specified.
 
 The code is written in python3 and depends on the modules within the conda environment file stats.yml.  After installing `miniconda`, run:
 ```
-conda env create -f stats.yml
-conda activate stats
+> conda env create -f stats.yml
+> conda activate stats
 ```
 or, if any changes are made to the environment file, re-install with
 ```
-conda deactivate
-conda env update -f stats.yml --prune
-conda activate stats
+> conda deactivate
+> conda env update -f stats.yml --prune
+> conda activate stats
 ```
 
 The following three modules are static and provide the structure of the model, code for running the MCMC, and other related tasks:
@@ -189,12 +189,12 @@ The following three template modules must be edited by the user when creating a 
 8. Import the model-hypothesis module within `mixed-effects_mcmc.py` and then run it with
 ```
 > conda activate stats           # if not already done
-(stats)> python mixed-effects_mcmc.py
+stats > python mixed-effects_mcmc.py
 ```
 or unattended
 ```
 > conda activate stats           # if not already done
-(stats)> at now
+stats > at now
 ./runit <descriptive-string-about-run>
 [Ctrl-d]
 ```
