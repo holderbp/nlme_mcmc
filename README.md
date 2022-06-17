@@ -144,7 +144,7 @@ The following three template modules must be edited by the user when creating a 
 
         * Set a descriptive name for each parameter as an entry in the `mm.descrip_name` dictionary.
 
-        * Set the initial guess values of the parameters in a dataframe, `indiv_x`, using the ordered list of individual names (specified in the data module) as an index.
+        * Set the initial guess values of the parameters in the `indiv_x` dataframe, using the ordered list of individual names (specified in the data module) as an index.
       If there are no `indiv_pop` parameters, or no `indiv_nopop` parameters, for this model hypothesis, create an empty dataframe for that case.
 
 6. Edit the `evolvemodel` module:
