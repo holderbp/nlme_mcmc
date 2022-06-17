@@ -24,7 +24,7 @@ Bayesian inference for a mixed-effects model follows the standard inference prot
 
 See the discussion in Gelman and Carlin's *Bayesian Data Analysis* (3rd Ed, 2014), regarding "The full Bayesian treatment of the hierarchical model" (Chapter 5).
 
-To implement this, we allow for four types of parameters, stored in the following variables:
+To implement this, we allow for four types of parameters, stored in the following variables (defined in the model-hypothesis module, see *How to create a new project*, below):
 
 * `indiv_pop`: Individual-specific parameters that are assumed to be drawn from a distribution over the population of individuals. In a standard mixed-effects model, these are the "random effects" (although often only the deviation from the population mean is called a random effect). [Implemented as a pandas dataframe indexed by individuals, with columns labeled by parameter name.]
 * `indiv_nopop`: Individual-specific parameters, but without any assumption of being drawn from a distribution. [Implemented as a pandas dataframe indexed by individuals, with columns labeled by parameter name.]
@@ -72,7 +72,7 @@ or, if any changes are made to the environment file, re-install with
 > conda activate stats
 ```
 
-The bash script `runit` allows for an easy unattended run (How to create a new project, Step 8), creating a unique timestamp for the log and error output files.
+The bash script `runit` allows for an easy unattended run (see *How to create a new project*, Step 8), creating a unique timestamp for the log and error output files.
 
 The following three modules are static and provide the structure of the model, code for running the MCMC, and other related tasks:
 
