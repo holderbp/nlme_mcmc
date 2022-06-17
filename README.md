@@ -104,17 +104,17 @@ The following three template modules must be edited by the user when creating a 
 
         - Adjust the import of the raw data file and create a dataframe with these columns: `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`.
 
-        - Assign descriptive unique names to each individual.
+        - Assign descriptive unique names to each individual in the `indiv` column.
 
-        - Assign descriptive labels for each distinct data set in the `'data_set'` column.
+        - Assign descriptive unique names for each distinct data set in the `'data_set'` column.
 
-        - Perform any necessary clean-up of the data file
+        - Perform any necessary cleaning of the dataframe.
 
-        - Flatten any replicate data points into their own rows of the dataframe.
+        - Ensure that there is a single data point per row (e.g., if multiple replicates are given per row in the raw file, flatten them into their own rows).
 
         - Specify which data sets are to be selected for each `data_analysis_subproject`.
 
-        - Sort the dataframe such that: the names of the individuals are ordered (used in the model hypothesis module for setting initial guess values) and the independent `X` values are ordered within data sets.
+        - Sort the dataframe such that: the names of the individuals have a known order (the ordered array created by `np.unique(df['indiv'])` will be used in the model hypothesis module for setting initial guess values), and the independent `X` values are ordered within data sets.
 
     * Within the `plot_data()` method, establish a multi-page figure structure for each `data_analysis_subproject` choice.
 
