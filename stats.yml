@@ -1,0 +1,37 @@
+# NOTE: apt-get install build-essential contains required compilers on debian
+---
+name: stats
+channels:
+#  - ioos
+  - conda-forge
+
+dependencies:
+  - python=3.7
+  - cython
+  - numpy
+  - scipy
+  - matplotlib
+  - pandas
+  - pretty_html_table
+  - xlrd
+  - jupyter
+  - statsmodels
+  - emcee
+  - tqdm
+  - h5py
+  - corner
+  - pystan
+  - seaborn
+  - networkx
+  - plotly
+  - openpyxl
+  - sympy
+  - lxml
+  - html5lib
+  - pip
+  - pip:
+      - webweb
+      - netwulf
+      - gcalcli
+      - pydataset
+
