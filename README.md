@@ -114,7 +114,7 @@ The following three template modules must be edited by the user when creating a 
 
         - Specify which data sets are to be selected for each `data_analysis_subproject`.
 
-        - Sort the dataframe such that: the names of the individuals have a known order (the ordered array created by `np.unique(df['indiv'])` will be used in the model hypothesis module for setting initial guess values), and the `'X'` values for each data set are ordered.
+        - Sort the dataframe such that: the names of the individuals have a known order (the ordered array created by `np.unique(df['indiv'])` will be used in the model hypothesis module for setting initial guess values in the `indiv_pop` and `indiv_nopop` dataframes), and the `'X'` values for each data set are ordered.
 
     * Within the `plot_data()` method, establish a multi-page figure structure for each `data_analysis_subproject` choice.
 
