@@ -69,6 +69,8 @@ or, if any changes are made to the environment file, re-install with
 > conda activate stats
 ```
 
+The bash script `runit` allows for an easy unattended run (How to create a new project, Step 8), creating a unique timestamp for the log and error output files.
+
 The following three modules are static and provide the structure of the model, code for running the MCMC, and other related tasks:
 
 * `mixed-effects_mcmc.py` --- Imports a user-provided "model hypothesis" module and then runs the MCMC to convergence, providing regular output (diagnostic information to user/logfile; most recent samples; plots of: the autocorrelation time, the marginal likelihood, recent chain dynamics).
