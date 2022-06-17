@@ -205,7 +205,7 @@ The following three template modules must be edited by the user when creating a 
    [Ctrl-d]
    ```
 
-9. Plot the posterior density over the data by importing the model-hypothesis module into `mixed-effects_plot-data.py` and running:
+9. Plot the posterior density over the data by importing the model-hypothesis module within `mixed-effects_plot-data.py` and then running it:
 
    ```
    > conda activate stats           # if not already done
