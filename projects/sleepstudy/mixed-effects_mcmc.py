@@ -17,103 +17,6 @@ import datetime as dt
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 #==============================================================
-#        Overview of the MCMC "mixed-effects" code
-#
-#   In a mixed-effects model (or, in Bayesian language, a
-#   Bayesian Hierarchical Model), we assume four types of
-#   parameters:
-#
-#     * individual-specific but assumed to be drawn from a
-#       distribution over the population of individuals. These
-#       are sometimes called "random effects" but we will call
-#       them: "individual-population" (I_pop) parameters
-#
-#     * individual-specific but without any assumption of
-#       being drawn from a distribution (I_nopop pars)
-#
-#     * parameters associated to specifying the population
-#       distribution itself (Pop pars)
-#
-#     * other parameters, e.g., those specifying the error-
-#       model for the calculation of log-likelihood (Other pars)
-#
-#   Bayes theorem for densities (for a particular data set "data",
-#   a chosen model hypothesis, "H", and associated parameters,
-#   "pars") is:
-#
-#                             f(data|pars, H) * f(pars|H)
-#         f(pars|data, H) = -------------------------------
-#                                     f(data|H)
-#
-#   where the lhs is the posterior density of the parameters,
-#   the numerator on the rhs is the "likelihood" of the parameters
-#   multiplied by the prior density of the parameters, and the
-#   denominator on the rhs is called the "marginal likelihood"
-#   (of the model hypothesis).
-#
-#   For a Bayesian hierarchical model, we assume that the
-#   joint prior distribution of the individual-pop and the
-#   population-distribution parameters should be written in terms
-#   of a conditional density
-#
-#      f(I_pop, Pop) = f(I_pop | Pop) * f(Pop)
-#
-#   so we must specify:
-#
-#      * a distribution for the conditional density, e.g.,
-#        I_pop is normally-distributed over the population.
-#
-#      * a prior distribution for each of the Pop pars
-#        specifying that distribution
-#
-#   Generally we consider the priors of the "Other" and the
-#   "I_nopop" parameters are independent, such that the full
-#   joint prior is written:
-#
-#    f(Other, I_nopop, I_pop, Pop) =
-#
-#               f(Other) * f(I_nopop) * f(I_pop, Pop)
-#
-#   where the priors for Other and I_nopop pars must also be
-#   specified.
-#
-#   This code, "mcmc_mixed-effects.py", is a wrapper for the
-#   emcee module, and runs MCMC chains until convergence is
-#   achieved.  Along the way, it provides the user with relevant
-#   convergence statistics, and it outputs regularly the current
-#   best samples, posterior estimates, and marginal likelihood
-#   estimates.
-#
-#   This main code assumes the existence of a data "project"
-#   module, e.g., "data_hiv-tcell.py", which can provide data
-#   sets for a multiple possible "data analysis" sub-projects
-#   (e.g., for data_hiv-tcell.py, we can look at just virus-decay,
-#   just timeseries, timeseries+virus-dilution, all-exper, ...).
-#   The data module is loaded by the model hypothesis module
-#   (see below) and provides the log-likelihood function.
-#
-#   For each "data analysis" sub-project, there can be multiple
-#   "model hypotheses", one of which is imported here as a module.
-#   The model hypothesis module provides the log-posterior for a
-#   given data-project/data-analysis/model-hypothesis choice. It
-#   also provides the individual log-prior and log-likelihood values
-#   that go into that sum, which are saved as blobs by emcee.
-#
-#   The comparison of different model hypotheses for a given data
-#   analysis sub-project is done by ranking the marginal
-#   likelihoods (ML) of each (or finding the Bayes factor comparing
-#   two hypotheses).  Marginal likelihood, as estimated by MCMC
-#   chains, is a very noisy quantity (even when using the Gelfand
-#   & Dey method for "correcting" the "harmonic mean of the
-#   likelihood" estimator) and should be estimated using (many
-#   steps in) the tail of a long converged MCMC run (the data
-#   and a plot for the ML are output regularly).
-#
-#==============================================================
-#//////////////////////////////////////////////////////////////
-
-#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-#==============================================================
 #            Import the chosen model hypothesis
 #
 #  A model hypothesis module contains the specific method of
@@ -136,11 +39,11 @@ import datetime as dt
 #  subproject" of a "data project", and should be named
 #  accordingly, e.g.,
 #
-#     modhyp_<project>_<subproject>_<model-hypothesis>
+#     module_<project>_modhyp_<subproject-name>_<model-hyp-name>
 #
 #==============================================================
-#import module_sleepstudy_modhyp_REmb_nocov_COMsig as mod
-import module_sleepstudy_modhyp_REbsigma_COMm as mod
+import module_sleepstudy_modhyp_REmb_nocov_COMsig as mod
+#import module_sleepstudy_modhyp_REbsigma_COMm as mod
 #import module_sleepstudy_modhyp_REb_COMmsig as mod
 #import module_sleepstudy_modhyp_REm_COMbsig as mod
 #import module_sleepstudy_modhyp_REnone_COMsig as mod
