@@ -181,7 +181,7 @@ The following three template modules must be edited by the user when creating a 
 or unattended
 ```
 > at now
-./runit <optional-descrip-string-about-run>
+./runit <descriptive-string-about-run>
 [Ctrl-d]
 ```
 
