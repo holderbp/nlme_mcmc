@@ -188,19 +188,19 @@ The following three template modules must be edited by the user when creating a 
 
 8. Import the model-hypothesis module within `mixed-effects_mcmc.py` and then run it with
 
-```
-> conda activate stats           # if not already done
-stats > python mixed-effects_mcmc.py
-```
+   ```
+   > conda activate stats           # if not already done
+   stats > python mixed-effects_mcmc.py
+   ```
 
    or unattended
 
-```
-> conda activate stats           # if not already done
-stats > at now
-./runit <descriptive-string-about-run>
-[Ctrl-d]
-```
+   ```
+   > conda activate stats           # if not already done
+   stats > at now
+   ./runit <descriptive-string-about-run>
+   [Ctrl-d]
+   ```
 
 9. After analysis of a particular `data_analysis_subproject` with a particular `model_hyp`, create new model-hypothesis modules to test other model hypotheses, or move on to other subprojects.
 

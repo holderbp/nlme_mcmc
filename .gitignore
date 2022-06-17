@@ -1,6 +1,9 @@
 *~
+#*
+.#*
 projects/hivtcell/data/individual-experiments/
 projects/hivtcell/data/hivtcell_alldata.xlsx
 projects/hivtcell/data/hivtcell_alldata_dos.csv
 projects/hivtcell/data/indivs.csv
 projects/hivtcell/data/old/
+projects/*/__pycache__/
