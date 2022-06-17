@@ -132,11 +132,19 @@ The following three template modules must be edited by the user when creating a 
 
 7. Edit the `modhyp` module:
 
-    * Specify the data module for import (`module_<*projectname*>_data`)
+    * Specify the data module for import (`module_<projectname>_data`).
 
     * Specify the `data_analysis_subproject`, which must match one created within the `data` module.
     
-    * Place a short descriptive string for this statistical model hypothesis in `model_hyp`.  This will be used for naming output files.
+    * Create a short descriptive string for this statistical model hypothesis in `model_hyp`.  This will be used for naming output files.
+
+    * Within the `INDIV_POP` and `INDIV_NOPOP` sections:
+
+        * Specify the ordered list of `indiv_x` parameters in `mm.list_indiv_x_pars`, which will be columns of a dataframe.
+
+        * Set the initial guess values of the `indiv_x` parameters in a dataframe with the individual names (specified in the data module) as indices.
+
+      If there are no `indiv_pop` or `indiv_nopop` parameters, create an empty dataframe for that case.
 
 6. Edit the `evolvemodel` module:
 
