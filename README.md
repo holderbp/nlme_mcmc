@@ -147,7 +147,7 @@ The following three template modules must be edited by the user when creating a 
 
 6. Edit the model-hypothesis module, `module_<projectname>_modhyp_<subprojectname>_<modhypname>.py`:
 
-    * Specify the data module for import (`module_<projectname>_data`).
+    * Import the data module for this project (`module_<projectname>_data.py`).
 
     * Specify the `data_analysis_subproject`, which must match one created within the `data` module.
     
