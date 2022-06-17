@@ -124,13 +124,7 @@ The following three template modules must be edited by the user when creating a 
 
         - Fill in the dictionary `theaxis` to specify which `[individual][evolve-model][data-set]` is assigned to which axis.  This will allow the associated evolve-model outputs to be automatically plotted into the correct subplots.
 
-6. Edit the `evolvemodel` module:
-
-    * Within the `run_evolve_model(...)` method, assign an evolve-model run for each evolve-model name that has been identified in the `data` module.
-    
-    * Add additional methods, or module imports (e.g., a module that brings in a system of ODEs), as needed to achieve these model evolutions.
-
-7. Edit the `modhyp` module:
+6. Edit the `modhyp` module:
 
     * Specify the data module for import (`module_<projectname>_data`).
 
@@ -158,7 +152,7 @@ The following three template modules must be edited by the user when creating a 
 
             * Specify the prior information for both `'<par>_mean'` and `'<par>_stdev'`, using the dictionaries: `mm.prior_dist`; `mm.prior_mean` and `mm.prior_stdev` (normal priors); `mm.prior_min` and `mm.prior_max` (uniform prior).
 
-            * Specify the "transformations" of both `'<par>_mean'` and `'<par>_stdev'`, using the dictionaries: `mm.tranf_mcmc` (transformation of value while conducting mcmc, e.g., `'log'` if the parameter should be strictly positive); `mm.tranf_plot` (when making cornerplots of the posterior distribution); `mm.transf_print` (when printing the values for user/logfile).
+            * Specify the "transformations" of both `'<par>_mean'` and `'<par>_stdev'`, using the dictionaries: `mm.tranf_mcmc` (transformation of value while conducting mcmc, e.g., `'log'` if the parameter should be strictly positive); `mm.transf_plot` (when making cornerplots of the posterior distribution); `mm.transf_print` (when printing the values for user/logfile).
 
     * Within the `OTHER` section:
 
@@ -170,9 +164,15 @@ The following three template modules must be edited by the user when creating a 
 
         - Specify the prior and transformation information (as in `POP`, above) for each parameter.
 
-6. Edit the `evolvemodel` module:
+    * Within the `IMPORTANT PARAMETERS` section, set `important_pars` to the list of names of non-nuisance and non-individual parameters to be tracked (usually the `POP` distribution parameters and the `OTHER` parameters).  These are the parameters that will be shown, e.g., in cornerplots.
 
-    * For every evolvemodel specified within the data module, create a method that takes independent values `X` and returns a dictionary of numpy arrays with keys the y_types.
+    * Within the `get_log_likelihood()` method, it should only be necessary to alter the error-model specification (e.g., whether the data variance is individual-specific, and thus one of the `INDIV_POP` or `INDIV_NOPOP` parameters, or whether it is common to all data sets, or, more generally, which non-normal distribution should be used).
+
+7. Edit the `evolvemodel` module:
+
+    * Within the `run_evolve_model(...)` method, assign an evolve-model run for each evolve-model name that has been identified in the `data` module (see the `Data Handling` section of Step 5). Create a method that takes independent values `X` and returns a dictionary of numpy arrays with keys the y_types.
+    
+    * Add additional methods, or module imports (e.g., a module that brings in a system of ODEs), as needed to achieve these model evolutions.
 
 ## Example projects
 
