@@ -94,6 +94,7 @@ The following three template modules must be edited by the user when creating a 
     * Within `Parameters`, set the `project_name` to \<*projectname*\> and specify the filename for import in `data_file`.
     
     * Within `Data Handling`, specify:
+
         - `data_sets`: the list of data-sets (names to be specified in the next step) that are simulated by each evolve-model (names to be specified in the evolve-model module), and
         - `evolve_model`: the inverse mapping to `data_sets`, i.e., the evolve-model whose simulation is to be compared to a particular data-set.
 
@@ -101,29 +102,42 @@ The following three template modules must be edited by the user when creating a 
       
     * Within the `prep_data()` method, manage the import of the raw data file into a dataframe of standard form, and define multiple `data_analysis_subproject`(s):
 
-        - Adjust the import of the raw data file creating a dataframe with these columns: `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`.
+        - Adjust the import of the raw data file and create a dataframe with these columns: `['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']`.
 
-        - Assign descriptive labels for each data set in the `'data_set'` column.
+        - Assign descriptive unique names to each individual.
+
+        - Assign descriptive labels for each distinct data set in the `'data_set'` column.
+
         - Perform any necessary clean-up of the data file
-	
+
+        - Flatten any replicate data points into their own rows of the dataframe.
+
         - Specify which data sets are to be selected for each `data_analysis_subproject`.
 
+        - Sort the dataframe such that: the names of the individuals are ordered (used in the model hypothesis module for setting initial guess values) and the independent `X` values are ordered within data sets.
+
     * Within the `plot_data()` method, establish a multi-page figure structure for each `data_analysis_subproject` choice.
+
         - Decide the logic of plotting (how many subplots on each page, which individual's data is plotted where) and create separate figures for each page (`fig1`, `fig2`, etc).
+
         - Specify the plotting of the data sets into the subplots of these figures.
+
         - Fill in the dictionary `theaxis` to specify which `[individual][evolve-model][data-set]` is assigned to which axis.  This will allow the associated evolve-model outputs to be automatically plotted into the correct subplots.
 
 6. Edit the `evolvemodel` module:
+
     * Within the `run_evolve_model(...)` method, assign an evolve-model run for each evolve-model name that has been identified in the `data` module.
+    
     * Add additional methods, or module imports (e.g., a module that brings in a system of ODEs), as needed to achieve these model evolutions.
 
 7. Edit the `modhyp` module:
+
     * Assign the `data_analysis_subproject`, which must match one created within the `data` module.
+    
     * Place a short descriptive string for this statistical model hypothesis in `model_hyp`.  This will be used for naming output files.
-    
-    
 
 6. Edit the `evolvemodel` module:
+
     * For every evolvemodel specified within the data module, create a method that takes independent values `X` and returns a dictionary of numpy arrays with keys the y_types.
 
 ## Example projects
