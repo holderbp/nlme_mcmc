@@ -202,7 +202,14 @@ The following three template modules must be edited by the user when creating a 
    [Ctrl-d]
    ```
 
-9. After analysis of a particular `data_analysis_subproject` with a particular `model_hyp`, create new model-hypothesis modules to test other model hypotheses, or move on to other subprojects.
+9. Plot the posterior density over the data by importing the model-hypothesis module into `mixed-effects_plot-data.py` and running:
+
+   ```
+   > conda activate stats           # if not already done
+   stats > python mixed-effects_plot-data.py output/<sample-file-name>
+   ```
+
+10. After analysis of a particular `data_analysis_subproject` with a particular `model_hyp`, create new model-hypothesis modules to test other model hypotheses, or define new data analysis subprojects (within the data module and with a new model hypothesis module).
 
 ## Example projects
 
