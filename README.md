@@ -152,7 +152,7 @@ The following three template modules must be edited by the user when creating a 
 
         - For each parameter `<par>` in `mm.list_indiv_pop_pars`:
 
-            * Set the distribution type in the `mm_pop_dist` dictionary.
+            * Set the distribution type in the `mm.pop_dist` dictionary.
 
             * Set an initial guess values for the distribution parameters in the `pop` dictionary, using `mm.pop['<par>_mean']` and `mm.pop['<par>_stdev']` (normal/lognormal).
 
