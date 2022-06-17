@@ -63,13 +63,17 @@ where the priors for the `other` and `indiv_nopop` parameters must be specified.
 The code is written in python3 and depends on the modules within the conda environment file stats.yml.  After installing, e.g. [miniconda](https://docs.conda.io/en/latest/miniconda.html), run:
 ```
 > conda env create -f stats.yml
+...
 > conda activate stats
+stats >
 ```
 or, if any changes are made to the environment file, re-install with
 ```
-> conda deactivate
+stats > conda deactivate
 > conda env update -f stats.yml --prune
+...
 > conda activate stats
+stats >
 ```
 
 The bash script `runit` allows for an easy unattended run (see *How to create a new project*, Step 8), creating a unique timestamp for the log and error output files.
