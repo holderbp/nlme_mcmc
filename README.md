@@ -132,7 +132,9 @@ The following three template modules must be edited by the user when creating a 
 
 7. Edit the `modhyp` module:
 
-    * Assign the `data_analysis_subproject`, which must match one created within the `data` module.
+    * Specify the data module for import (`module_<*projectname*>_data`)
+
+    * Specify the `data_analysis_subproject`, which must match one created within the `data` module.
     
     * Place a short descriptive string for this statistical model hypothesis in `model_hyp`.  This will be used for naming output files.
 
