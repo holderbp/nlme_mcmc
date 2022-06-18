@@ -14,7 +14,7 @@ import module_mixed_effects_model as mm
 #
 #=== Import the data PROJECT
 #
-import module_sleepstudy_data as dat
+import module_hivtcell_data as dat
 project_name = dat.project_name 
 #
 #=== Define the DATA ANALYSIS SUB-PROJECT to be used
@@ -29,7 +29,7 @@ data_analysis_subproject = 'virus-decay'
 #           Random effects for m and b (single distribution, no cov)
 #           common normal error (stdev) in data about model, sigma
 #
-model_hyp = 'no-RE-all-cells'
+model_hyp = 'no-RE-all-cells-common-lognormal-errors'
 #
 #=== Load data into the data module and get the following
 #    parameters and parameter objects (to be stored in the
@@ -100,87 +100,75 @@ mm.indiv_pop = pd.DataFrame(d)
 #
 #--- INDIV_NOPOP (Individual parameters not distributed by population)
 #
-#    For this dasp, there were
+#    For this dasp, there are three parameters
 #
-#                        <none>
+mm.list_indiv_nopop_pars = ['A', 'B', 'thalf']
 #
-mm.list_indiv_nopop_pars = []
-d = {}
+# order is [act, ecm, ecp, rest] within [A, B, thalf]
+#
+# guess values taken from xmgrace fits (2017-05-08 analysis)
+#    (thalf = log(2) / c)
+#
+init_vecs = [
+    [10736, 24900,
+     1890, 3670,
+     6817, 8508,
+     204, 204],
+    [9.46, 5.52,
+     7.5, 8.0,
+     165, 52,
+     7.2, 7.2],
+    [0.36, 0.42,
+     0.34, 0.28,
+     0.23, 0.25,
+     0.23, 0.23]
+]
+d = dict(zip(mm.list_indiv_nopop_pars, init_vecs))
 mm.indiv_nopop = pd.DataFrame(d)
-#
-#    If there were parameters in indiv_nopop, we would use the
-#    individual names as an index (as with indiv_pop):
-#
-#          mm.indiv_nopop = pd.DataFrame(d, index=mm.indiv_names)
-#
-#    and also define elements of these dictionaries for each
-#    parameter
-#
-#        [descrip_name,
-#         prior_dist, prior_mean, prior_min, prior_max,
-#         tranf_mcmc, tranf_plot, transf_print]
+mm.descrip_name['A'] = "outer coeff, moi model"
+mm.prior_dist['A'] = 'lognormal'
+mm.prior_mean['A'] = 0.01
+mm.prior_stdev['A'] = 10.0
+mm.transf_mcmc['A'] = 'log'
+mm.transf_plot['A'] = 'log'
+mm.transf_print['A'] = 'none'
+mm.descrip_name['B'] = "inner coeff, moi model"
+mm.prior_dist['B'] = 'lognormal'
+mm.prior_mean['B'] = 3.0
+mm.prior_stdev['B'] = 5.0
+mm.transf_mcmc['B'] = 'log'
+mm.transf_plot['B'] = 'log'
+mm.transf_print['B'] = 'none'
+mm.descrip_name['thalf'] = "virion infectious halflife"
+mm.prior_dist['thalf'] = 'lognormal'
+mm.prior_mean['thalf'] = 0.1
+mm.prior_stdev['thalf'] = 5.0
+mm.transf_mcmc['thalf'] = 'log'
+mm.transf_plot['thalf'] = 'none'
+mm.transf_print['thalf'] = 'none'
 #
 #--- POP (Random effects population distribution parameters)
 #
 #    For each parameter in "list_indiv_pop_pars", specify a
 #    distribution, with parameters, priors, and transformations
 #
-#--- slope, "m"
-# population distribution type
-mm.pop_dist['m'] = 'normal'
-# two population parameters to be followed by MCMC
-mm.pop['m_mean'], mm.pop['m_stdev'] = 8.0, 30.0
-# prior and transformation for the mean
-mm.prior_dist['m_mean'] = 'normal'
-mm.prior_mean['m_mean'], mm.prior_stdev['m_mean'] = 8.0, 30.0
-mm.prior_min['m_mean'], mm.prior_max['m_mean'] = -20.0, 40.0
-mm.transf_mcmc['m_mean'] = 'none'
-mm.transf_plot['m_mean'] = 'none'
-mm.transf_print['m_mean'] = 'none'
-# prior and transformation for the stdev    
-mm.prior_dist['m_stdev'] = 'lognormal'
-mm.prior_mean['m_stdev'], mm.prior_stdev['m_stdev'] = mm.pop['m_stdev'], widthfac
-mm.prior_min['m_stdev'], mm.prior_max['m_stdev'] = 1.0, 50.0
-mm.transf_mcmc['m_stdev'] = 'log'
-mm.transf_plot['m_stdev'] = 'none'
-mm.transf_print['m_stdev'] = 'none'
-#
-#--- intercept "b"
-#
-# population distribution type
-mm.pop_dist['b'] = 'normal'
-# two population parameters to be followed by MCMC
-mm.pop['b_mean'], mm.pop['b_stdev'] = 300.0, 100.0
-# prior and transformation for the mean    
-mm.prior_dist['b_mean'] = 'normal'
-mm.prior_mean['b_mean'], mm.prior_stdev['b_mean'] = 300.0, 100.0
-mm.prior_min['b_mean'], mm.prior_max['b_mean'] = 200.0, 400.0
-mm.transf_mcmc['b_mean'] = 'none'
-mm.transf_plot['b_mean'] = 'none'
-mm.transf_print['b_mean'] = 'none'
-# prior and transformation for the stdev    
-mm.prior_dist['b_stdev'] = 'lognormal'
-mm.prior_mean['b_stdev'], mm.prior_stdev['b_stdev'] = mm.pop['b_stdev'], widthfac    
-mm.prior_min['b_stdev'], mm.prior_max['b_stdev'] = 1.0, 400.0
-mm.transf_mcmc['b_stdev'] = 'log'
-mm.transf_plot['b_stdev'] = 'none'
-mm.transf_print['b_stdev'] = 'none'
+#          <none>
 #
 #--- OTHER (other pars, e.g., those associated to error-model)
 #
 #    In this model hypothesis we have:
 #
-#        'sigma': common normal error stdev for all individuals
+#        'sigma': common log-normal error stdev for all individuals
 #
 mm.list_other_pars = ['sigma']
-mm.descrip_name['sigma'] = 'common data error variance'
-mm.other['sigma'] = 20.0
+mm.descrip_name['sigma'] = 'common data lognormal-error'
+mm.other['sigma'] = 2.0
 # prior and transformation for sigma    
 mm.prior_dist['sigma'] = 'lognormal'
-mm.prior_mean['sigma'], mm.prior_stdev['sigma'] = mm.other['sigma'], widthfac
-mm.prior_min['sigma'], mm.prior_max['sigma'] = 1.0, 100.0
+mm.prior_mean['sigma'], mm.prior_stdev['sigma'] = 2.0, 5.0
+mm.prior_min['sigma'], mm.prior_max['sigma'] = 0.1, 50.0
 mm.transf_mcmc['sigma'] = 'log'
-mm.transf_plot['sigma'] = 'none'
+mm.transf_plot['sigma'] = 'log'
 mm.transf_print['sigma'] = 'none'
 #
 #=== IMPORTANT PARAMETERS (non-nuisance) for plotting
@@ -190,7 +178,7 @@ mm.transf_print['sigma'] = 'none'
 #
 #             [<pop pars>, sigma]
 #
-important_pars = ['m_mean', 'm_stdev', 'b_mean', 'b_stdev', 'sigma']
+important_pars = ['A', 'B', 'thalf', 'sigma']
 ind_important_pars = None  # to be set below
 
 def get_log_likelihood():
@@ -203,10 +191,10 @@ def get_log_likelihood():
     #
     # for this model-hypothesis, we assume:
     #
-    #   normally-distributed error with
+    #   log-normally-distributed error with
     #   common variance for all data sets
     #
-    sigma_sqrd = mm.other['sigma']**2
+    logsigmasqrd = (np.log(mm.other['sigma']) )**2
     #
     # but you could have individualized values (set within
     # the mm.indiv_names loop below):
@@ -245,8 +233,10 @@ def get_log_likelihood():
                 # out the y-values for the x-values of that dataset
                 ymod = y_model[d][mm.xindices_for_indiv[i][em][d]]
                 log_like += \
-                    -0.5*np.sum( (mm.yvals_for_indiv[i][em][d] - ymod)**2 / sigma_sqrd
-                                 + np.log(2.0 * np.pi * sigma_sqrd) )
+                    -0.5*np.sum( (np.log(mm.yvals_for_indiv[i][em][d])
+                                  - np.log(ymod))**2 \
+                                 / logsigmasqrd
+                                 + np.log(2.0 * np.pi * logsigmasqrd) )
     return log_like
 
 #======================================================================#

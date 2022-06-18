@@ -14,6 +14,53 @@ other = None         # dictionary
 datasets_for_indiv = None
 yvals_type_for_indiv = None
 
+def run_evolve_model(em, indiv_name, X):
+    """
+    Called by get_evolve_model_solutions() method.  
+    
+    Returns dictionary of all data sets produced by
+    the evolve-model run, with y_data_type as key.
+    """
+    if (em == 'virus-decay-moi'):
+        # First find the parameters among the parameter objects
+        A = find_par_in_par_objects('A', indiv_name)
+        B = find_par_in_par_objects('B', indiv_name)
+        thalf = find_par_in_par_objects('thalf', indiv_name)
+        c = np.log(2)/thalf
+        # Then calculated y-values
+        Y = A * (1.0 - np.exp( - B * np.exp( -c * X) ) )
+        return {'count_inf': np.array(Y)}
+        
+def get_evolve_model_solutions(indiv_name, em, xvals):
+    """
+    Public method called by mod-hyp module's log-likelihood.
+    Must call set_pars() first to set current parameter values.
+    
+    Runs an evolve-model for a given individual, using their own
+    parameters (plus the "other", if necessary) and get back a
+    dictionary numpy vectors of yvals each data type:
+
+         soln =   {
+                    ydata_type_1: [y1(x1), y1(x2), ... , y1(xn)],
+                    ydata_type_2: [y2(x1), y2(x2), ... , y2(xn)],
+                                  ...
+                    ydata_type_m: [ym(x1), ym(x2), ... , ym(xn)]
+                  }
+
+    Then put the soln values into dictionary with dataset as key
+    """
+    soln = run_evolve_model(em, indiv_name, xvals)
+    ymod = {}
+    for d in datasets_for_indiv[indiv_name][em]:
+        ymod[d] = soln[yvals_type_for_indiv[indiv_name][em][d]]
+    return ymod
+
+#======================================================================#
+#                                                                      #
+#                No adjustments should be needed below                 #
+#                                                                      #
+#======================================================================#
+
 def initialize(mh_dsfi, mh_yvtfi):
     """
     Public method called by model hypothesis module to set these
@@ -51,41 +98,3 @@ def find_par_in_par_objects(parkey, indiv_name):
         val = other[parkey]
     return val
 
-def run_evolve_model(em, indiv_name, X):
-    """
-    Called by get_evolve_model_solutions() method.  
-    
-    Returns dictionary of all data sets produced by
-    the evolve-model run, with y_data_type as key.
-    """
-    if (em == 'linear'):
-        # First find the parameters among the parameter objects
-        m = find_par_in_par_objects('m', indiv_name)
-        b = find_par_in_par_objects('b', indiv_name)
-        # Then calculated y-values
-        Y = m*X + b
-        return {'reaction-time_ms': np.array(Y)}
-        
-def get_evolve_model_solutions(indiv_name, em, xvals):
-    """
-    Public method called by mod-hyp module's log-likelihood.
-    Must call set_pars() first to set current parameter values.
-    
-    Runs an evolve-model for a given individual, using their own
-    parameters (plus the "other", if necessary) and get back a
-    dictionary numpy vectors of yvals each data type:
-
-         soln =   {
-                    ydata_type_1: [y1(x1), y1(x2), ... , y1(xn)],
-                    ydata_type_2: [y2(x1), y2(x2), ... , y2(xn)],
-                                  ...
-                    ydata_type_m: [ym(x1), ym(x2), ... , ym(xn)]
-                  }
-
-    Then put the soln values into dictionary with dataset as key
-    """
-    soln = run_evolve_model(em, indiv_name, xvals)
-    ymod = {}
-    for d in datasets_for_indiv[indiv_name][em]:
-        ymod[d] = soln[yvals_type_for_indiv[indiv_name][em][d]]
-    return ymod

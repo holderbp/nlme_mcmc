@@ -19,22 +19,6 @@ import datetime as dt
 #==============================================================
 #            Import the chosen model hypothesis
 #
-#  A model hypothesis module contains the specific method of
-#  calculating the log-posterior, which is the sum of:
-#
-#     * conditional log-prior of the I_pop pars with respect
-#       to the current population distribution
-#     * log-prior for the Pop (pop dist) parameters
-#     * log-prior for I_nopop parameters
-#     * log-prior of any Other parameters
-#
-#  and
-#
-#     * the log-likelihood of the data given these parameters
-#
-#  It gets the log-likelihood calculation from the data module,
-#  which depends on everything but the Pop parameters.
-#
 #  Model hypothesis modules are associated to a "data analysis
 #  subproject" of a "data project", and should be named
 #  accordingly, e.g.,
@@ -42,12 +26,7 @@ import datetime as dt
 #     module_<project>_modhyp_<subproject-name>_<model-hyp-name>
 #
 #==============================================================
-#import module_sleepstudy_modhyp_REmb_nocov_COMsig as mod
-import module_sleepstudy_modhyp_REbsigma_COMm as mod
-#import module_sleepstudy_modhyp_REb_COMmsig as mod
-#import module_sleepstudy_modhyp_REm_COMbsig as mod
-#import module_sleepstudy_modhyp_REnone_COMsig as mod
-#import module_sleepstudy_modhyp_REnone_INDIVmbsig as mod
+import module_hivtcell_modhyp_virusdecay_noRE as mod
 #==============================================================
 #//////////////////////////////////////////////////////////////
 

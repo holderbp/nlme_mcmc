@@ -81,7 +81,7 @@ def prep_data():
     other methods (except plot_data()) can be independent of project.
     """
     #
-    #--- Import the raw data file
+    #=== Import the raw data file
     #
     #    The HIV-Tcell raw data file has columns:
     #
@@ -91,7 +91,7 @@ def prep_data():
     #
     df = pd.read_csv(data_file)
     #
-    #--- Create unique labels of individuals
+    #=== Create unique labels of individuals
     #
     #    Although the cell donors whose blood was used for
     #    a given trial are the actual individuals, their
@@ -141,7 +141,7 @@ def prep_data():
     df['indiv'] = df['cell_type'] + '_' + df['exp_type_dummy'] \
         + '_' + str(df['exp_trial'])
     #
-    #--- Create unique data-set names
+    #=== Create unique data-set names
     #
     #    We'll specify datasets by: exp_type + y_data_type
     #
@@ -151,52 +151,83 @@ def prep_data():
     #
     df['data_set'] = df['exp_type'] + df['y_data_type']
     #
-    #--- Clean up the dataframe
+    #=== Clean up the dataframe
     #
-    #Remove rows of infected cell data for uninfected trials
+    #--- Remove rows of infected cell data for uninfected trials
     df = df[ ~( (df['exp_type'] == 'timeseries_uninf')
                & ( (df['y_data_type'] == 'frac_inf')
                    | (df['y_data_type'] == 'dead_frac_of_inf') ) )]
     #
-    #--- Flatten any replicate data, putting each dependent
+    #--- Get total number of cells infected for the virus decay experiments
+    #
+    vdf = df[ (df['exp_type'] == 'virus_decay')
+              & (df['y_data_type'] == 'count_tot')].copy()
+    vdf.reset_index(drop=True, inplace=True)
+    repstrings = ['rep1', 'rep2', 'rep3', 'rep4', 'rep5', 'rep6', 'rep7', 'rep8']
+    curindex = 0
+    #
+    #--- Loop through the frac_inf data, and multiply
+    #    onto the associated count_tot data
+    #
+    for index, row in df.iterrows():
+        if ( (row.exp_type == 'virus_decay')
+             & (row.y_data_type == 'frac_inf') ):
+            for rep in repstrings:
+                if not pd.isnull(row[rep]):
+                    vdf.at[curindex, rep] = row[rep] * vdf.at[curindex, rep]
+                    # Set any zero-valued points to Nan (will be fitting log(val))
+                    if (vdf.at[curindex, rep] == 0):
+                        vdf.loc[curindex, rep] = np.nan
+                    curindex +=1
+    vdf['y_data_type'] = count_inf
+    #
+    #--- Append the virus_decay-count_inf data to the full dataframe
+    #   (this is not independent, but is what we want to use for virus_decay)
+    df = df.append(vdf)
+    #
+    #=== Flatten any replicate data, putting each dependent
     #    data point into its own row
     #
     # Set 'rep1' column to be 'Y'
     df['Y'] = df['rep1']
     #
     # move the repN (N>1) into their own rows
-    repstrings = ['rep2', 'rep3', 'rep4', 'rep5', 'rep6', 'rep7', 'rep8']
     newrows = []
     for index, row in df.iterrows():
         r = row.copy()
-        for rep in repstrings:
+        for rep in repstrings[1:]:
             if not pd.isnull(row[rep]):
                 r['Y'] = r[rep]
                 newrows.append(r)
     df = df.append(pd.DataFrame(newrows), ignore_index=True)
+    # delete any nan-valued points
+    df = df[~(df['Y'].isna)]
     df.to_csv("junk1.csv", index=False)    
     #
-    #--- Select out only the data sets for the chosen subproject
+    #=== Select out only the data sets for the chosen subproject
     #
-    # Check if only a single cell type should be used and restrict to that
-    #     (data_analysis_subproject should then be, e.g.,
-    #          "rest_infected-timeseries")
+    #--- First check if only a single cell type should be
+    #    used and restrict to that data.  In that case the
+    #    data_analysis_subproject would be of the form, e.g.,
+    #
+    #         rest_infected-timeseries
+    #
     dasp_celltype = data_analysis_subproject.split('_')[0]
     if (dasp_celltype in ['act', 'rest', 'ecp', 'ecm']):
         df = df[ (df['cell_type'] == dasp_celltype) ]
     else:
         dasp_celltype = 'all'
-    # Select data by analysis subproject
+    #--- Set data to be used for each data analysis subproject
     if (data_analysis_subproject == 'virus-decay'):
-        # VIRUS DECAY: only using the frac-infected data
+        # VIRUS DECAY: only using the number infected data
         df = df[ (df['exp_type'] == 'virus_decay')
-                 & (df['y_data_type'] == 'frac_inf') ]
+                 & (df['y_data_type'] == 'count_inf') ]
     else:
         print("***Error: Data Analysis Subproject" 
               + data_analysis_subproject + " not recognized.")
         exit(0)
     #
-    #--- Sort dataframe such that the order of individuals
+    #=== Sort dataframe such that the order of individuals
     #    is clear (for specifying initial values in the
     #    model-hypothesis module), and such that the
     #    dependent values X are ordered.
@@ -211,7 +242,7 @@ def prep_data():
     #
     df = df.sort_values(['cell_type', 'exp_type', 'exp_trial', 'y_data_type', 'X'])
     #
-    #--- Retain only the standard columns:
+    #=== Retain only the standard columns:
     #
     #       [indiv, data_set, x_data_type, X, y_data_type, Y]
     #
@@ -219,10 +250,12 @@ def prep_data():
     df.to_csv("junk2.csv", index=False)
     #
     #--- Return the ordered list of distinct individual names for
-    #    this data analysis subproject.
+    #    this data analysis subproject, along with the dataframe.
     #
-    inames = np.unique(df['indiv'].to_numpy())
-    return len(inames), inames, df
+    inames = df['indiv'].to_numpy()
+    _ , idx = np.unique(inames, return_index=True)
+    inames = inames[np.sort(idx)]
+    return inames, df
 
 def plot_data(ppars):
     """
@@ -537,7 +570,8 @@ def load_data(mhyp, da_subproj):
     #
     #              [indiv, data_set, X]
     #
-    Nindiv, indiv_names, df = prep_data()
+    indiv_names, df = prep_data()
+    Nindiv = len(indiv_names)
     #
     #--- Place the data for each dictionaries, organized by:
     #
