@@ -310,24 +310,27 @@ def set_pars(theta):
     """
     mm.take_vec_from_mcmc(theta)
 
-def get_pars(transf_type, getnames=False):
+def get_pars(transf_type, justnames=False):
     """
     Public method for getting the parameters and the parameter names
     from the mod-hyp module. (Called by mcmc_mixed-effects.py)
     """
     if ( (transf_type == 'print')
-         | ( (plot_with_print_transformation) & (transf_type == 'plot') ) ):
-        thetavec = mm.give_vec_for(mm.transf_print, justnames=False)
-        if getnames:
-            return thetavec, mm.give_vec_for(mm.transf_print, justnames=True)
+         | ( (transf_type == 'plot') & (plot_with_print_transformation) ) ):
+        if justnames:
+            return mm.give_vec_for(mm.transf_print, justnames=True)
         else:
-            return thetavec
+            return mm.give_vec_for(mm.transf_print, justnames=False)
     elif (transf_type == 'plot'):
-        thetavec = mm.give_vec_for(mm.transf_plot, justnames=False)        
-        if getnames:
-            return thetavec, mm.give_vec_for(mm.transf_plot, justnames=True)
+        if justnames:
+            return mm.give_vec_for(mm.transf_plot, justnames=True)
         else:
-            return thetavec
+            return mm.give_vec_for(mm.transf_plot, justnames=False)        
+    elif (transf_type == 'mcmc'):
+        if justnames:
+            return mm.give_vec_for(mm.transf_mcmc, justnames=True)
+        else:
+            return mm.give_vec_for(mm.transf_mcmc, justnames=False)        
 
 def log_like_and_prior(theta):
     """
