@@ -33,12 +33,12 @@ other = None         # dictionary
 #=======================================================
 #--- map: evolve-model to (list of) data-set(s)
 data_sets = {
-    'virus-decay-moi' : ['virus_decay',
+    'virus-decay-moi' : ['virus_decay_count_inf',
                          ],
 }
 #--- map: data-set to evolve-model
 evolve_model = {
-    'virus_decay' : 'virus-decay-moi',
+    'virus_decay_count_inf' : 'virus-decay-moi',
 }
 # 
 #--- The data for each individual
@@ -139,17 +139,7 @@ def prep_data():
     #  rest_virus_dilution_1, rest_virus_dilution_2, rest_virus_dilution_3]
     #
     df['indiv'] = df['cell_type'] + '_' + df['exp_type_dummy'] \
-        + '_' + str(df['exp_trial'])
-    #
-    #=== Create unique data-set names
-    #
-    #    We'll specify datasets by: exp_type + y_data_type
-    #
-    #    (these names do not include cell type, since each cell type
-    #     has same data-set(s), for which the associated evolve-model
-    #     will just be run with different parameters)/
-    #
-    df['data_set'] = df['exp_type'] + df['y_data_type']
+        + '_' + df['exp_trial'].astype(str)
     #
     #=== Clean up the dataframe
     #
@@ -163,12 +153,12 @@ def prep_data():
     vdf = df[ (df['exp_type'] == 'virus_decay')
               & (df['y_data_type'] == 'count_tot')].copy()
     vdf.reset_index(drop=True, inplace=True)
-    repstrings = ['rep1', 'rep2', 'rep3', 'rep4', 'rep5', 'rep6', 'rep7', 'rep8']
-    curindex = 0
     #
     #--- Loop through the frac_inf data, and multiply
     #    onto the associated count_tot data
     #
+    repstrings = ['rep1', 'rep2', 'rep3', 'rep4', 'rep5', 'rep6', 'rep7', 'rep8']
+    curindex = 0
     for index, row in df.iterrows():
         if ( (row.exp_type == 'virus_decay')
              & (row.y_data_type == 'frac_inf') ):
@@ -178,12 +168,23 @@ def prep_data():
                     # Set any zero-valued points to Nan (will be fitting log(val))
                     if (vdf.at[curindex, rep] == 0):
                         vdf.loc[curindex, rep] = np.nan
-                    curindex +=1
-    vdf['y_data_type'] = count_inf
+            curindex +=1
+    vdf['y_data_type'] = 'count_inf'
     #
     #--- Append the virus_decay-count_inf data to the full dataframe
     #   (this is not independent, but is what we want to use for virus_decay)
     df = df.append(vdf)
+    #
+    #=== Create unique data-set names
+    #
+    #    We'll specify datasets by: exp_type + y_data_type
+    #
+    #    (these names do not include cell type, since each cell type
+    #     has same data-set(s), for which the associated evolve-model
+    #     will just be run with different parameters)/
+    #
+    df['data_set'] = df['exp_type'] + '_' + df['y_data_type']
+    #
     #
     #=== Flatten any replicate data, putting each dependent
     #    data point into its own row
@@ -201,7 +202,7 @@ def prep_data():
                 newrows.append(r)
     df = df.append(pd.DataFrame(newrows), ignore_index=True)
     # delete any nan-valued points
-    df = df[~(df['Y'].isna)]
+    df = df[~( df['Y'].isna() )]
     df.to_csv("junk1.csv", index=False)    
     #
     #=== Select out only the data sets for the chosen subproject
@@ -220,8 +221,7 @@ def prep_data():
     #--- Set data to be used for each data analysis subproject
     if (data_analysis_subproject == 'virus-decay'):
         # VIRUS DECAY: only using the number infected data
-        df = df[ (df['exp_type'] == 'virus_decay')
-                 & (df['y_data_type'] == 'count_inf') ]
+        df = df[ (df['data_set'] == 'virus_decay_count_inf') ]
     else:
         print("***Error: Data Analysis Subproject" 
               + data_analysis_subproject + " not recognized.")

@@ -26,7 +26,7 @@ import datetime as dt
 #     module_<project>_modhyp_<subproject-name>_<model-hyp-name>
 #
 #==============================================================
-import module_hivtcell_modhyp_virusdecay_noRE as mod
+import module_hivtcell_modhyp_virusdecay_IPOPnone_INOPOPABthalf_COMsig.py
 #==============================================================
 #//////////////////////////////////////////////////////////////
 
@@ -206,7 +206,9 @@ N_imp_pars = None
 #==============================================================
 # put the max-likelihood/posterior on cornerplot as "truths"
 #     (otherwise no "truths")
-cornerplot_plot_maxvals = True 
+cornerplot_plot_maxvals = True
+# in addition to an "important parameters" plot, make one for all
+cornerplot_make_allplot = True
 #==============================================================
 #//////////////////////////////////////////////////////////////
 
@@ -260,8 +262,10 @@ samples_fig_file = plotdir + timestring + "_" \
     + "samples" + "_" + file_suffix + ".pdf"
 samples_data_file = datadir + timestring + "_" \
     + "samples" + "_" + file_suffix + ".dat"
-cornerplot_fig_file = plotdir + timestring + "_" \
-    + "cornerplot" + "_" + file_suffix +  ".pdf"
+cornerplotall_fig_file = plotdir + timestring + "_" \
+    + "cornerplotall" + "_" + file_suffix +  ".pdf"
+cornerplotimp_fig_file = plotdir + timestring + "_" \
+    + "cornerplotimp" + "_" + file_suffix +  ".pdf"
 #==============================================================
 #//////////////////////////////////////////////////////////////
 
@@ -894,22 +898,27 @@ flat_samples_transformed_plot = []
 for i in range(len(flat_samples)):
     mod.set_pars(flat_samples[i])    
     flat_samples_transformed_print.append(mod.get_pars('print'))
-    flat_samples_transformed_plot.append(mod.get_pars('print'))
+    flat_samples_transformed_plot.append(mod.get_pars('plot'))
 flat_samples_transformed_print = np.array(flat_samples_transformed_print)
 flat_samples_transformed_plot = np.array(flat_samples_transformed_plot)
 
 #--- Output median + 68% percentiles
 print_percentiles(flat_samples_transformed_print, [16, 50, 84])
 
-#--- Make a corner plot of the "random effect" parameters
+#--- Make a corner plot of the "important" parameters
 flat_samples_re = flat_samples_transformed_plot[:,ind_imp_pars]
 if cornerplot_plot_maxvals:
     mod.set_pars(pars_MAP)    
     pars_MAP_transformed = mod.get_pars('plot')
-    fig2 = corner.corner(flat_samples_re, labels=imp_par_names,
+    figCI = corner.corner(flat_samples_re, labels=imp_par_names,
                          truths=pars_MAP_transformed[ind_imp_pars])
+    if cornerplot_make_allplot:
+        figCA = corner.corner(flat_samples_transformed_plot, labels=par_names,
+                              truths=pars_MAP_transformed)
 else:
-    fig2 = corner.corner(flat_samples_re, labels=imp_par_names)
+    figCI = corner.corner(flat_samples_re, labels=imp_par_names)
+    if cornerplot_make_allplot:
+        figCA = corner.corner(flat_samples_transformed_plot, labels=par_names)
 
 #--- Get a multivariate normal fit to the posterior
 #     (overplotted on cornerplot, used for G&D Marginal likelihood)
@@ -931,35 +940,41 @@ mvn_samples_transformed = np.array(mvn_samples_transformed)
 if (len(ind_imp_pars) == 1):
     iip = np.concatenate( (ind_imp_pars, [ind_imp_pars[0]-1]) )
     corner.corner(mvn_samples_transformed[:,iip],
-                  fig=fig2, color='red',
+                  fig=figCI, color='red',
                   plot_datapoints=False, plot_density=False,
                   hist_kwargs = {'alpha' : 0.0})
     # reset the yrange on the 1-D histograms
     ndim = len(flat_samples[0])
-    axes = np.array(fig2.axes).reshape((2,2))
+    axes = np.array(figCI.axes).reshape((2,2))
     for i in range(2):
         ax = axes[i, i]
         ymin, ymax = ax.get_ylim()
         ax.set_ylim(ymin, ymax/ml_fac_to_make_smooth)
 else:
     corner.corner(mvn_samples_transformed[:,ind_imp_pars],
-                  fig=fig2, color='red',
+                  fig=figCI, color='red',
                   plot_datapoints=False, plot_density=False,
                   hist_kwargs = {'alpha' : 0.0})
     # reset the yrange on the 1-D histograms
     ndim = len(flat_samples[0])
-    axes = np.array(fig2.axes).reshape((N_imp_pars, N_imp_pars))
+    axes = np.array(figCI.axes).reshape((N_imp_pars, N_imp_pars))
     for i in range(N_imp_pars):
         ax = axes[i, i]
         ymin, ymax = ax.get_ylim()
         ax.set_ylim(ymin, ymax/ml_fac_to_make_smooth)
+    if cornerplot_make_allplot:
+        corner.corner(mvn_samples_transformed,
+                      fig=figCA, color='red',
+                      plot_datapoints=False, plot_density=False,
+                      hist_kwargs = {'alpha' : 0.0})
 
 #--- Calculate marginal likelihood and print to user
 print(dividerstr)
 a, b = calc_marg_like(flat_samples, mvn)
 #--- Save figures
 print(dividerstr)
-print("Saving cornerplot figure to\n\t" + cornerplot_fig_file)
-fig2.savefig(cornerplot_fig_file)
+print("Saving cornerplot figures to\n\t" + cornerplot_fig_file)
+figCI.savefig(cornerplotimp_fig_file)
+figCA.savefig(cornerplotall_fig_file)
 #==============================================================
 #//////////////////////////////////////////////////////////////
