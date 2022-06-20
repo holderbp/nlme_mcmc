@@ -124,7 +124,7 @@ file_cornerplot_imp = plotdir + sample_tag + "_" + "cornerplot_imp" + ".pdf"
 #                      MAIN CODE
 #==============================================================
 #--- Print info to user/logfile
-dividerstr = "==============================================================="
+dividerstr = 65*"="
 #
 #--- Get the initial guess for the maximum a posteriori point, while:
 #     Initializing model and data modules, and print their parameters to user/logfile

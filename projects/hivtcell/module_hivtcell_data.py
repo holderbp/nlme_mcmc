@@ -11,13 +11,22 @@ sns.set()
 #=======================================================
 #                   Parameters
 #=======================================================
-#--- Name of this data project
+#-------------------------------------------------------
+#
+#          set the name of this data project
+#
+#-------------------------------------------------------
 project_name = "hivtcell"
 #--- Model hypothesis pars (to be set by mod-hyp module)
 data_analysis_subproject = None
 model_hyp = None
-#--- File containing all data for project
+#-------------------------------------------------------
+#
+#  Specify the filepath containing all data for project
+#
+#-------------------------------------------------------
 data_file = "data/hivtcell_alldata.csv"
+#
 #--- Data parameters
 #    (to be set when choosing data_analysis_subproject)
 Nindiv = None
@@ -31,12 +40,20 @@ other = None         # dictionary
 #=======================================================
 #                 Data Handling
 #=======================================================
-#--- map: evolve-model to (list of) data-set(s)
+#-------------------------------------------------------
+#
+# Set the list of data-sets produced by each evolvemodel
+#
+#-------------------------------------------------------
 data_sets = {
     'virus-decay-moi' : ['virus_decay_count_inf',
                          ],
 }
-#--- map: data-set to evolve-model
+#-------------------------------------------------------
+#
+#   Set the evolve model that produces each data-set
+#
+#-------------------------------------------------------
 evolve_model = {
     'virus_decay_count_inf' : 'virus-decay-moi',
 }
@@ -80,8 +97,11 @@ def prep_data():
     This method is specific to the particular project, so that all
     other methods (except plot_data()) can be independent of project.
     """
+    #-------------------------------------------------------
     #
-    #=== Import the raw data file
+    #                Import the data file
+    #
+    #-------------------------------------------------------
     #
     #    The HIV-Tcell raw data file has columns:
     #
@@ -90,8 +110,11 @@ def prep_data():
     #      rep1, rep2, rep3, rep4, rep5, rep6, rep7, rep8]
     #
     df = pd.read_csv(data_file)
+    #-------------------------------------------------------
     #
-    #=== Create unique labels of individuals
+    #    Identify and set names for the "individuals"
+    #
+    #-------------------------------------------------------
     #
     #    Although the cell donors whose blood was used for
     #    a given trial are the actual individuals, their
@@ -114,8 +137,7 @@ def prep_data():
             | (df['exp_type'] == 'timeseries_inf') ), 'exp_type_dummy'] = \
                 'timeseries'
     #
-    # set the unique informative individual names, which are,
-    # for this project:
+    # This specification of individuals leaves these names:
     #
     # [act_drugstopping_efav_1, act_drugstopping_efav_2, act_drugstopping_efav_3,
     #  act_drugstopping_ralt_1, act_drugstopping_ralt_2,
@@ -140,10 +162,14 @@ def prep_data():
     #
     df['indiv'] = df['cell_type'] + '_' + df['exp_type_dummy'] \
         + '_' + df['exp_trial'].astype(str)
+    #-------------------------------------------------------
     #
-    #=== Clean up the dataframe
+    # Perform any necessary clean-up/pre-analysis of the data
+    #
+    #-------------------------------------------------------    
     #
     #--- Remove rows of infected cell data for uninfected trials
+    #
     df = df[ ~( (df['exp_type'] == 'timeseries_uninf')
                & ( (df['y_data_type'] == 'frac_inf')
                    | (df['y_data_type'] == 'dead_frac_of_inf') ) )]
@@ -174,20 +200,26 @@ def prep_data():
     #--- Append the virus_decay-count_inf data to the full dataframe
     #   (this is not independent, but is what we want to use for virus_decay)
     df = df.append(vdf)
+    df.reset_index(inplace=True)
+    #-------------------------------------------------------
     #
-    #=== Create unique data-set names
+    #        Identify and give names to each data set
     #
-    #    We'll specify datasets by: exp_type + y_data_type
+    #-------------------------------------------------------        
     #
-    #    (these names do not include cell type, since each cell type
-    #     has same data-set(s), for which the associated evolve-model
-    #     will just be run with different parameters)/
+    #  We'll specify datasets by: exp_type + y_data_type
+    #
+    #  (these names do not include cell type, since each
+    #   cell-type uses same data-set(s), for which the
+    #   associated evolve-model just run with different
+    #   parameters)
     #
     df['data_set'] = df['exp_type'] + '_' + df['y_data_type']
+    #-------------------------------------------------------
     #
+    #    Flatten any replicate data to one point per row
     #
-    #=== Flatten any replicate data, putting each dependent
-    #    data point into its own row
+    #-------------------------------------------------------    
     #
     # Set 'rep1' column to be 'Y'
     df['Y'] = df['rep1']
@@ -195,17 +227,21 @@ def prep_data():
     # move the repN (N>1) into their own rows
     newrows = []
     for index, row in df.iterrows():
-        r = row.copy()
+        r = df.iloc[index]
         for rep in repstrings[1:]:
             if not pd.isnull(row[rep]):
                 r['Y'] = r[rep]
-                newrows.append(r)
+                # must append a copy or you'll get the same value
+                newrows.append(r.copy())
     df = df.append(pd.DataFrame(newrows), ignore_index=True)
     # delete any nan-valued points
     df = df[~( df['Y'].isna() )]
-    df.to_csv("junk1.csv", index=False)    
+    df.to_csv("junk1.csv", index=False)
+    #-------------------------------------------------------
     #
-    #=== Select out only the data sets for the chosen subproject
+    #     Select only the data sets for the DA-subproject
+    #
+    #-------------------------------------------------------        
     #
     #--- First check if only a single cell type should be
     #    used and restrict to that data.  In that case the
@@ -218,19 +254,23 @@ def prep_data():
         df = df[ (df['cell_type'] == dasp_celltype) ]
     else:
         dasp_celltype = 'all'
-    #--- Set data to be used for each data analysis subproject
+    #
+    #--- Then select data to be used for each data
+    #    analysis subproject
+    #
     if (data_analysis_subproject == 'virus-decay'):
         # VIRUS DECAY: only using the number infected data
         df = df[ (df['data_set'] == 'virus_decay_count_inf') ]
     else:
+        # NONE RECOGNIZED
         print("***Error: Data Analysis Subproject" 
               + data_analysis_subproject + " not recognized.")
         exit(0)
+    #-------------------------------------------------------
     #
-    #=== Sort dataframe such that the order of individuals
-    #    is clear (for specifying initial values in the
-    #    model-hypothesis module), and such that the
-    #    dependent values X are ordered.
+    # Sort the dataframe, to know that order of individuals
+    #
+    #-------------------------------------------------------            
     #
     #    Here, since our individual names are:
     #
@@ -241,11 +281,13 @@ def prep_data():
     #       [cell_type, exp_type, exp_trial, y_data_type, X]
     #
     df = df.sort_values(['cell_type', 'exp_type', 'exp_trial', 'y_data_type', 'X'])
+    #-------------------------------------------------------
     #
-    #=== Retain only the standard columns:
+    #   Retain only these standard columns:
     #
-    #       [indiv, data_set, x_data_type, X, y_data_type, Y]
+    #     [indiv, data_set, x_data_type, X, y_data_type, Y]
     #
+    #-------------------------------------------------------
     df = df[['indiv', 'data_set', 'x_data_type', 'X', 'y_data_type', 'Y']]
     df.to_csv("junk2.csv", index=False)
     #
@@ -270,271 +312,181 @@ def plot_data(ppars):
     For each data_analysis_subproject, this script should be to create
     the relevant plots
     """
-    #================================================================    
-    #    Establish different plot for each data_analysis_subproject
+    #-------------------------------------------------------    
     #
-    #    Let's create a multi-page pdf. To do so, we'll make three
-    #    figures with 3 rows and 2 columns each, so six individuals
-    #    on each page.
+    #     Establish a different set of figures for each
+    #     data_analysis_subproject
     #
-    #    First, plot the data into these axes.
+    #-------------------------------------------------------
     #
-    #    Then take the evolve-model functions for 68-95% CI,
-    #    passed from the model-hypothesis module in ppars,  to
-    #    overplot the representation of the posterior samples.
-    #
-    #    Finally use PdfPages to save the multiple figures to a
-    #    multi-page pdf
-    #
-    #    At the time of setting up data module the user can
-    #    decide how to display the data sets used for each
-    #    data_analysis_subproject.
-    #
-    #================================================================    
-    if (data_analysis_subproject == 'response-time-vs-days-deprivation'):
+    if (data_analysis_subproject == 'virus-decay'):
+        #-------------------------------------------------------
         #
-        #=======================================================
-        #            Plot the data values first
-        #=======================================================        
+        #       Create the figure objects for each page
         #
-        # First create figures for each page
+        #-------------------------------------------------------        
         #
-        # Page 1  (label each figure object with a "num")
+        #=== common parameters 
         #
-        nrows, ncols = 3, 2
-        fig1, axes1 = plt.subplots(nrows, ncols, figsize=(8, 10.5), num='pg1')
-        # add a hidden axis and give it the common x and y labels
-        ax1 = fig1.add_subplot(111, frameon=False)
-        ax1.grid(False)
-        plt.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
-        plt.xlabel("Sleep Deprivation (d)")
-        plt.ylabel("Reaction Time (ms)")
-        # a title on page 1
-        fig1.suptitle("Sleepstudy data with mod_hyp = " + model_hyp)
+        #--- same shape size of each page
+        nrows, ncols = 2,2
+        figx, figy = 8, 10.5
         #
-        # Page 2
+        #--- plotting pars
         #
-        fig2, axes2 = plt.subplots(nrows, ncols, figsize=(8, 10.5), num='pg2')
-        # add a hidden axis and give it the common x and y labels
-        ax2 = fig2.add_subplot(111, frameon=False)
-        ax2.grid(False)
-        plt.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
-        plt.xlabel("Sleep Deprivation (d)")
-        plt.ylabel("Reaction Time (ms)")
+        # logscale on y
+        #   (if you want logscale, you have to do it *after* seaborn plots)
+        plotlogy = True
         #
-        # Page 3
+        # common y/x --- if to be set automatically, leave as None
         #
-        fig3, axes3 = plt.subplots(nrows, ncols, figsize=(8, 10.5), num='pg3')
-        # add a hidden axis and give it the common x and y labels
-        ax3 = fig3.add_subplot(111, frameon=False)
-        ax3.grid(False)
-        plt.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
-        plt.xlabel("Sleep Deprivation (d)")
-        plt.ylabel("Reaction Time (ms)")
+        xlims = [-0.2,4.2]
+        ylims = [0.8, 2e5]
         #
-        #--- Plot each individual's data in their respective subplot axes
         #
-        # There's only one evolve-model and dataset here, and it's the
-        # same for all individuals.
+        # data point color
+        datacolor = 'black'
+        #
+        # Figures for each page (label each figure object with a "num")
+        #
+        figure_nums = ['pg1', 'pg2']
+        #
+        #=== Page 1  
+        #
+        fig1, axes1 = plt.subplots(nrows, ncols, figsize=(figx, figy), num='pg1')
+        #
+        # to make large common x- and y- labels, create a hidden axis
+        #
+        ax1 = make_hidden_axis(fig1, "Time of incubation (d)",
+                               "Number infected cells")
+        #
+        #=== Make a super-title on page 1, declaring mod-hyp
+        #
+        fig1.suptitle("Virus decay w/ model hypothesis = " + model_hyp)
+        #
+        #=== Page 2
+        #
+        fig2, axes2 = plt.subplots(nrows, ncols, figsize=(figx, figy), num='pg2')
+        # add a hidden axis to make common x/y-labels
+        ax2 = make_hidden_axis(fig2, "Time of incubation (d)",
+                               "Number infected cells")
+        #
+        #-------------------------------------------------------
+        #
+        #         Plot each individual's data in their axis
+        #
+        #-------------------------------------------------------        
+        #
+        # set individual names
+        #
+        act1 = 'act_virus_decay_1'; act2 = 'act_virus_decay_2'
+        rest1 = 'rest_virus_decay_1'; rest2 = 'rest_virus_decay_2'
+        ecm1 = 'ecm_virus_decay_1'; ecm2 = 'ecm_virus_decay_2'
+        ecp1 = 'ecp_virus_decay_1'; ecp2 = 'ecp_virus_decay_2'
+        #
+        # get evolvemodel and dataset names (same for all)
         #
         em = evolve_models_for_indiv[indiv_names[0]][0]
         ds = datasets_for_indiv[indiv_names[0]][em][0]
-        # activate first page figure and loop over first six individuals
+        #
+        # activate first page figure, plot ACT and REST
+        #
         plt.figure('pg1')
-        for i in np.arange(0,6):
-            x = xvals_for_indiv[indiv_names[i]][em][ds]
-            y = yvals_for_indiv[indiv_names[i]][em][ds]
-            r = i // ncols
-            c = i % ncols
-            axes1[r,c].set_ylim(200,500)
-            sns.scatterplot(ax=axes1[r,c], zorder=10, x=x, y=y, color='black')
-        # activate second page figure 
+        ind = 0
+        for i in [act1, act2, rest1, rest2]:
+            x = xvals_for_indiv[i][em][ds]
+            y = yvals_for_indiv[i][em][ds]
+            r = ind // ncols
+            c = ind % ncols
+            axes1[r,c].set_title(i)
+            # use zorder to keep data points on "top"
+            sns.scatterplot(ax=axes1[r,c], zorder=10, x=x, y=y, color=datacolor)
+            ind +=1
+        # activate second page figure, plot ECM and ECP
         plt.figure('pg2')
-        for i in np.arange(6,12):
-            ii = i % 6
-            x = xvals_for_indiv[indiv_names[i]][em][ds]
-            y = yvals_for_indiv[indiv_names[i]][em][ds]
-            r = ii // ncols
-            c = ii % ncols
-            axes2[r,c].set_ylim(200,500)
-            sns.scatterplot(ax=axes2[r,c], zorder=10, x=x, y=y, color='black')
-        # activate third page figure             
-        plt.figure('pg3')
-        for i in np.arange(12,18):
-            ii = i % 6
-            x = xvals_for_indiv[indiv_names[i]][em][ds]
-            y = yvals_for_indiv[indiv_names[i]][em][ds]
-            r = ii // ncols
-            c = ii % ncols
-            axes3[r,c].set_ylim(200,500)
-            sns.scatterplot(ax=axes3[r,c], zorder=10, x=x, y=y, color='black')
-        # exit if just plotting data
+        ind = 0
+        for i in [ecm1, ecm2, ecp1, ecp2]:
+            x = xvals_for_indiv[i][em][ds]
+            y = yvals_for_indiv[i][em][ds]
+            r = ind // ncols
+            c = ind % ncols
+            axes2[r,c].set_title(i)            
+            sns.scatterplot(ax=axes2[r,c], zorder=10, x=x, y=y, color=datacolor)
+            ind += 1
+        #
+        # if just plotting data, exit  (skip to end to set output)
+        #
         if (ppars['plot_type'] == 'only_data'):
             # just save the plot
             pass
         else:
-            #================================================================
-            #               Assign axes to each [i][em][ds]
-            #================================================================
-            # for sleepmodel there is only one evolve-model
+            #-------------------------------------------------------
+            #
+            #           Assign axes to each [i][em][ds]
+            #
+            #-------------------------------------------------------
+            #
+            # for virus-decay there is only one evolve-model
             # and one associated dataset... same for each indiv
+            #
             em = evolve_models_for_indiv[indiv_names[0]][0]
             ds = datasets_for_indiv[indiv_names[0]][em][0]
             theaxis = {}
-            for i in range(len(indiv_names)):
-                n = indiv_names[i]
-                theaxis[n] = {}
-                theaxis[n][em] = {}
-                ii = i % 6
-                r = ii // ncols
-                c = ii % ncols
-                if (i < 6):
-                    theaxis[n][em][ds] = axes1[r,c]
-                elif (i < 12):
-                    theaxis[n][em][ds] = axes2[r,c]
-                else:
-                    theaxis[n][em][ds] = axes3[r,c]                    
-            #================================================================
-            #   Plot the posterior distribution of the model over the data
-            #================================================================
-            if (ppars['plot_type'] == 'median'):
-                # plot just the median of the samples
-                for i in indiv_names:
-                    for em in evolve_models_for_indiv[i]:
-                        for ds in datasets_for_indiv[i][em]:
-                            xx = ppars['xmodels'][i][em]
-                            y = ppars['CIbounds'][i][em][ds][2,:]
-                            sns.lineplot(ax=theaxis[i][em][ds], zorder=1, x = xx,
-                                         y = y, color='black', linestyle='--')
-            elif (ppars['plot_type'] == 'spaghetti'):
-                # for each dataset, plot all model evaluations
-                for i in indiv_names:
-                    for em in evolve_models_for_indiv[i]:
-                        for ds in datasets_for_indiv[i][em]:
-                            xx = ppars['xmodels'][i][em]
-                            for s in range(len(ppars['ymodels'][i][em][ds])):
-                                yy = ppars['ymodels'][i][em][ds][s]
-                                sns.lineplot(ax=theaxis[i][em][ds], zorder=1, x = xx,
-                                             y = yy, alpha = 0.1, color='red')
-                            if (ppars['plot_median']):
-                                sns.lineplot(ax=theaxis[i][em][ds], zorder=1, x = xx,
-                                             y = ppars['CIbounds'][i][em][ds][2,:],
-                                             color='black', linestyle='--')                                             
-            elif (ppars['plot_type'] == '68CI_line'):
-                # plot just the bounds of the 68% confidence interval
-                for i in indiv_names:
-                    for em in evolve_models_for_indiv[i]:
-                        for ds in datasets_for_indiv[i][em]:
-                            xx = ppars['xmodels'][i][em]
-                            ylow = ppars['CIbounds'][i][em][ds][1,:]
-                            yhigh = ppars['CIbounds'][i][em][ds][3,:]                            
-                            sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
-                                         x = xx , y = ylow, color=ppars['color_dark'])
-                            sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
-                                         x = xx, y = yhigh, color=ppars['color_dark'])
-                            if (ppars['plot_median']):
-                                sns.lineplot(ax=theaxis[i][em][ds], zorder=1, x = xx,
-                                             y = ppars['CIbounds'][i][em][ds][2,:],
-                                             color='black', linestyle='--')                                             
-            elif (ppars['plot_type'] == '95CI_line'):
-                # plot just the bounds of the 95% confidence interval
-                for i in indiv_names:
-                    for em in evolve_models_for_indiv[i]:
-                        for ds in datasets_for_indiv[i][em]:
-                            xx = ppars['xmodels'][i][em]
-                            ylow = ppars['CIbounds'][i][em][ds][0,:]
-                            yhigh = ppars['CIbounds'][i][em][ds][4,:]                            
-                            sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
-                                         x = xx , y = ylow, color=ppars['color_dark'])
-                            sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
-                                         x = xx, y = yhigh, color=ppars['color_dark'])
-                            if (ppars['plot_median']):
-                                sns.lineplot(ax=theaxis[i][em][ds], zorder=1, x = xx,
-                                             y = ppars['CIbounds'][i][em][ds][2,:],
-                                             color='black', linestyle='--')                                             
-            elif (ppars['plot_type'] == '68-95CI_line'):
-                # plot just the bounds of the 68% and 95% confidence intervals
-                for i in indiv_names:
-                    for em in evolve_models_for_indiv[i]:
-                        for ds in datasets_for_indiv[i][em]:
-                            xx = ppars['xmodels'][i][em]
-                            ylowest = ppars['CIbounds'][i][em][ds][0,:]
-                            ylow = ppars['CIbounds'][i][em][ds][1,:]
-                            yhigh = ppars['CIbounds'][i][em][ds][3,:]                            
-                            yhighest = ppars['CIbounds'][i][em][ds][4,:]                            
-                            sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
-                                         x = xx , y = ylowest, color=ppars['color_light'])
-                            sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
-                                         x = xx , y = ylow, color=ppars['color_dark'])
-                            sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
-                                         x = xx , y = yhigh, color=ppars['color_dark'])
-                            sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
-                                         x = xx, y = yhighest, color=ppars['color_light'])
-                            if (ppars['plot_median']):
-                                sns.lineplot(ax=theaxis[i][em][ds], zorder=1, x = xx,
-                                             y = ppars['CIbounds'][i][em][ds][2,:],
-                                             color='black', linestyle='--')
-            elif (ppars['plot_type'] == '68-95CI_region'):
-                # plot the 68% and 95% confidence regions
-                for i in indiv_names:
-                    for em in evolve_models_for_indiv[i]:
-                        for ds in datasets_for_indiv[i][em]:
-                            xx = ppars['xmodels'][i][em]
-                            ylowest = ppars['CIbounds'][i][em][ds][0,:]
-                            ylow = ppars['CIbounds'][i][em][ds][1,:]
-                            yhigh = ppars['CIbounds'][i][em][ds][3,:]                            
-                            yhighest = ppars['CIbounds'][i][em][ds][4,:]
-                            theaxis[i][em][ds].fill_between(xx, ylowest, yhighest, zorder=1,
-                                                            color=ppars['color_light'], alpha = 1)
-                            theaxis[i][em][ds].fill_between(xx, ylow, yhigh, zorder=5,
-                                                            color=ppars['color_dark'], alpha = 1)
-                            if (ppars['plot_median']):
-                                sns.lineplot(ax=theaxis[i][em][ds], zorder=6, x = xx,
-                                             y = ppars['CIbounds'][i][em][ds][2,:],
-                                             color='black', linestyle='--')                                             
-            elif (ppars['plot_type'] == '68CI_region'):
-                # plot the 68% confidence region
-                for i in indiv_names:
-                    for em in evolve_models_for_indiv[i]:
-                        for ds in datasets_for_indiv[i][em]:
-                            xx = ppars['xmodels'][i][em]
-                            ylow = ppars['CIbounds'][i][em][ds][1,:]
-                            yhigh = ppars['CIbounds'][i][em][ds][3,:]                            
-                            theaxis[i][em][ds].fill_between(xx, ylow, yhigh, zorder=5,
-                                                            color=ppars['color_dark'], alpha = 1)
-                            if (ppars['plot_median']):
-                                sns.lineplot(ax=theaxis[i][em][ds], zorder=6, x = xx,
-                                             y = ppars['CIbounds'][i][em][ds][2,:],
-                                             color='black', linestyle='--')                                             
-            elif (ppars['plot_type'] == '95CI_region'):
-                # plot the 95% confidence interval region
-                for i in indiv_names:
-                    for em in evolve_models_for_indiv[i]:
-                        for ds in datasets_for_indiv[i][em]:
-                            xx = ppars['xmodels'][i][em]
-                            ylowest = ppars['CIbounds'][i][em][ds][0,:]
-                            yhighest = ppars['CIbounds'][i][em][ds][4,:]
-                            theaxis[i][em][ds].fill_between(xx, ylowest, yhighest, zorder=1,
-                                                            color=ppars['color_light'], alpha = 1)
-                            if (ppars['plot_median']):
-                                sns.lineplot(ax=theaxis[i][em][ds], zorder=6, x = xx,
-                                             y = ppars['CIbounds'][i][em][ds][2,:],
-                                             color='black', linestyle='--')                                             
-    # adjust all figures
-    fig1.tight_layout()
-    fig2.tight_layout()
-    fig3.tight_layout()
-    # put into multi-page pdf
+            theaxis[act1] = {}
+            theaxis[act1][em] = {}
+            theaxis[act1][em][ds] = axes1[0,0]            
+            theaxis[act2] = {}
+            theaxis[act2][em] = {}
+            theaxis[act2][em][ds] = axes1[0,1]            
+            theaxis[rest1] = {}
+            theaxis[rest1][em] = {}
+            theaxis[rest1][em][ds] = axes1[1,0]            
+            theaxis[rest2] = {}
+            theaxis[rest2][em] = {}
+            theaxis[rest2][em][ds] = axes1[1,1]            
+            theaxis[ecm1] = {}
+            theaxis[ecm1][em] = {}
+            theaxis[ecm1][em][ds] = axes2[0,0]            
+            theaxis[ecm2] = {}
+            theaxis[ecm2][em] = {}
+            theaxis[ecm2][em][ds] = axes2[0,1]            
+            theaxis[ecp1] = {}
+            theaxis[ecp1][em] = {}
+            theaxis[ecp1][em][ds] = axes2[1,0]            
+            theaxis[ecp2] = {}
+            theaxis[ecp2][em] = {}
+            theaxis[ecp2][em][ds] = axes2[1,1]            
+            #-------------------------------------------------------
+            #
+            #         No further adjustment should be needed
+            #
+            #-------------------------------------------------------
+            plot_posterior_over_model(ppars, theaxis)
+    #
+    #=== set logscale
+    #
+    #  (this must be done *after* seaborn makes its plots)
+    #
+    for r in range(nrows):
+        for c in range(ncols):
+            if plotlogy:
+                axes1[r,c].set(yscale='log')
+                axes2[r,c].set(yscale='log')
+            if xlims is not None:
+                axes1[r,c].set_xlim(xlims)
+                axes2[r,c].set_xlim(xlims)                
+            if ylims is not None:
+                axes1[r,c].set_ylim(ylims)
+                axes2[r,c].set_ylim(ylims)                
+    #
+    #=== put into multi-page pdf
+    #
     with mplbp.PdfPages(ppars['plot_file']) as pdf:
-        plt.figure('pg1')
-        pdf.savefig()
-        plt.close()
-        plt.figure('pg2')
-        pdf.savefig()
-        plt.close()
-        plt.figure('pg3')
-        pdf.savefig()
-        plt.close()
+        for p in figure_nums:
+            plt.figure(p)
+            plt.tight_layout()
+            pdf.savefig()
+            plt.close()
     print("\n\nFigure saved to:")
     print("\t" + ppars['plot_file'])
 
@@ -543,6 +495,146 @@ def plot_data(ppars):
 #                No adjustments should be needed below                 #
 #                                                                      #
 #======================================================================#    
+
+def make_hidden_axis(fig, xlabel, ylabel):
+    ax = fig.add_subplot(111, frameon=False)
+    ax.grid(False)
+    plt.tick_params(labelcolor='none', which='both',
+                    top=False, bottom=False, left=False, right=False)
+    plt.xlabel(xlabel, fontsize=20, labelpad=10)
+    plt.ylabel(ylabel, fontsize=20, labelpad=10)
+    return ax
+
+def plot_posterior_over_model(ppars, theaxis):
+    if (ppars['plot_type'] == 'median'):
+        # plot just the median of the samples
+        for i in indiv_names:
+            for em in evolve_models_for_indiv[i]:
+                for ds in datasets_for_indiv[i][em]:
+                    xx = ppars['xmodels'][i][em]
+                    y = ppars['CIbounds'][i][em][ds][2,:]
+                    sns.lineplot(ax=theaxis[i][em][ds], zorder=1, x = xx,
+                                 y = y, color='black', linestyle='--')
+    elif (ppars['plot_type'] == 'spaghetti'):
+        # for each dataset, plot all model evaluations
+        for i in indiv_names:
+            for em in evolve_models_for_indiv[i]:
+                for ds in datasets_for_indiv[i][em]:
+                    xx = ppars['xmodels'][i][em]
+                    for s in range(len(ppars['ymodels'][i][em][ds])):
+                        yy = ppars['ymodels'][i][em][ds][s]
+                        sns.lineplot(ax=theaxis[i][em][ds], zorder=1, x = xx,
+                                     y = yy, alpha = 0.1, color='red')
+                    if (ppars['plot_median']):
+                        sns.lineplot(ax=theaxis[i][em][ds], zorder=1, x = xx,
+                                     y = ppars['CIbounds'][i][em][ds][2,:],
+                                     color='black', linestyle='--') 
+    elif (ppars['plot_type'] == '68CI_line'):
+        # plot just the bounds of the 68% confidence interval
+        for i in indiv_names:
+            for em in evolve_models_for_indiv[i]:
+                for ds in datasets_for_indiv[i][em]:
+                    xx = ppars['xmodels'][i][em]
+                    ylow = ppars['CIbounds'][i][em][ds][1,:]
+                    yhigh = ppars['CIbounds'][i][em][ds][3,:]  
+                    sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
+                                 x = xx , y = ylow, color=ppars['color_dark'])
+                    sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
+                                 x = xx, y = yhigh, color=ppars['color_dark'])
+                    if (ppars['plot_median']):
+                        sns.lineplot(ax=theaxis[i][em][ds], zorder=1, x = xx,
+                                     y = ppars['CIbounds'][i][em][ds][2,:],
+                                     color='black', linestyle='--') 
+    elif (ppars['plot_type'] == '95CI_line'):
+        # plot just the bounds of the 95% confidence interval
+        for i in indiv_names:
+            for em in evolve_models_for_indiv[i]:
+                for ds in datasets_for_indiv[i][em]:
+                    xx = ppars['xmodels'][i][em]
+                    ylow = ppars['CIbounds'][i][em][ds][0,:]
+                    yhigh = ppars['CIbounds'][i][em][ds][4,:]  
+                    sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
+                                 x = xx , y = ylow, color=ppars['color_dark'])
+                    sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
+                                 x = xx, y = yhigh, color=ppars['color_dark'])
+                    if (ppars['plot_median']):
+                        sns.lineplot(ax=theaxis[i][em][ds], zorder=1, x = xx,
+                                     y = ppars['CIbounds'][i][em][ds][2,:],
+                                     color='black', linestyle='--') 
+    elif (ppars['plot_type'] == '68-95CI_line'):
+        # plot just the bounds of the 68% and 95% confidence intervals
+        for i in indiv_names:
+            for em in evolve_models_for_indiv[i]:
+                for ds in datasets_for_indiv[i][em]:
+                    xx = ppars['xmodels'][i][em]
+                    ylowest = ppars['CIbounds'][i][em][ds][0,:]
+                    ylow = ppars['CIbounds'][i][em][ds][1,:]
+                    yhigh = ppars['CIbounds'][i][em][ds][3,:] 
+                    yhighest = ppars['CIbounds'][i][em][ds][4,:] 
+                    sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
+                                 x = xx , y = ylowest, color=ppars['color_light'])
+                    sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
+                                 x = xx , y = ylow, color=ppars['color_dark'])
+                    sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
+                                 x = xx , y = yhigh, color=ppars['color_dark'])
+                    sns.lineplot(ax=theaxis[i][em][ds], zorder=1,
+                                 x = xx, y = yhighest, color=ppars['color_light'])
+                    if (ppars['plot_median']):
+                        sns.lineplot(ax=theaxis[i][em][ds], zorder=1, x = xx,
+                                     y = ppars['CIbounds'][i][em][ds][2,:],
+                                     color='black', linestyle='--')
+    elif (ppars['plot_type'] == '68-95CI_region'):
+        # plot the 68% and 95% confidence regions
+        for i in indiv_names:
+            for em in evolve_models_for_indiv[i]:
+                for ds in datasets_for_indiv[i][em]:
+                    xx = ppars['xmodels'][i][em]
+                    ylowest = ppars['CIbounds'][i][em][ds][0,:]
+                    ylow = ppars['CIbounds'][i][em][ds][1,:]
+                    yhigh = ppars['CIbounds'][i][em][ds][3,:] 
+                    yhighest = ppars['CIbounds'][i][em][ds][4,:]
+                    theaxis[i][em][ds].fill_between(xx, ylowest, yhighest,
+                                                    zorder=1,
+                                                    color=ppars['color_light'],
+                                                    alpha = 1)
+                    theaxis[i][em][ds].fill_between(xx, ylow, yhigh, zorder=5,
+                                                    color=ppars['color_dark'],
+                                                    alpha = 1)
+                    if (ppars['plot_median']):
+                        sns.lineplot(ax=theaxis[i][em][ds], zorder=6, x = xx,
+                                     y = ppars['CIbounds'][i][em][ds][2,:],
+                                     color='black', linestyle='--')
+    elif (ppars['plot_type'] == '68CI_region'):
+        # plot the 68% confidence region
+        for i in indiv_names:
+            for em in evolve_models_for_indiv[i]:
+                for ds in datasets_for_indiv[i][em]:
+                    xx = ppars['xmodels'][i][em]
+                    ylow = ppars['CIbounds'][i][em][ds][1,:]
+                    yhigh = ppars['CIbounds'][i][em][ds][3,:] 
+                    theaxis[i][em][ds].fill_between(xx, ylow, yhigh, zorder=5,
+                                                    color=ppars['color_dark'],
+                                                    alpha = 1)
+                    if (ppars['plot_median']):
+                        sns.lineplot(ax=theaxis[i][em][ds], zorder=6, x = xx,
+                                     y = ppars['CIbounds'][i][em][ds][2,:],
+                                     color='black', linestyle='--')  
+    elif (ppars['plot_type'] == '95CI_region'):
+        # plot the 95% confidence interval region
+        for i in indiv_names:
+            for em in evolve_models_for_indiv[i]:
+                for ds in datasets_for_indiv[i][em]:
+                    xx = ppars['xmodels'][i][em]
+                    ylowest = ppars['CIbounds'][i][em][ds][0,:]
+                    yhighest = ppars['CIbounds'][i][em][ds][4,:]
+                    theaxis[i][em][ds].fill_between(xx, ylowest, yhighest,
+                                                    zorder=1,
+                                                    color=ppars['color_light'],
+                                                    alpha = 1)
+                    if (ppars['plot_median']):
+                        sns.lineplot(ax=theaxis[i][em][ds], zorder=6, x = xx,
+                                     y = ppars['CIbounds'][i][em][ds][2,:],
+                                     color='black', linestyle='--')
 
 def load_data(mhyp, da_subproj):
     """

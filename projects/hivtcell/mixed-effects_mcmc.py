@@ -286,7 +286,7 @@ mm.cornerplotimp_fig_file = plotdir + timestring + "_" \
 #
 #--- Print info to user/logfile
 #
-dividerstr = "==============================================================="
+dividerstr = 65*"="
 print(dividerstr)
 print(f"Random seed = {theseed:d}")
 print("Start time = " + str(mm.start_time))
