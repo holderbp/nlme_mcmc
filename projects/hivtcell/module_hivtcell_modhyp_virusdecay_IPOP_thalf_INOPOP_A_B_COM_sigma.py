@@ -29,7 +29,7 @@ data_analysis_subproject = 'virus-decay'
 #           Random effects for m and b (single distribution, no cov)
 #           common normal error (stdev) in data about model, sigma
 #
-model_hyp = 'no-RE-all-cells-common-sigma-and-thalf'
+model_hyp = 'RE-thalf-common-lognormal-errors'
 #
 #=== Load data into the data module and get the following
 #    parameters and parameter objects (to be stored in the
@@ -80,23 +80,17 @@ plot_with_print_transformation=False
 #    For this model hypothesis, the indiv_pop pars for each
 #    individual are:
 #
-#                  []
-#
 widthfac = 5.0
-mm.list_indiv_pop_pars = []
-#mm.descrip_name['m'] = 'slope'
-#init_vecs = [
-#    [25, 0.0, 10, 15, 2, 0,
-#     15, 25, -10, 15, 5, 10,
-#     0, 5, 10, 10, 5, 5],
-#    [290.0, 200.0, 226.0, 273.0, 298.0, 316.0,
-#     286.0, 238.0, 263.9, 312.9, 229.0, 248.0,
-#     264.0, 330.0, 267.0, 235.0, 257.0, 290.7]
-#]
-#d = dict(zip(mm.list_indiv_pop_pars, init_vecs))
-#mm.indiv_pop = pd.DataFrame(d, index=mm.indiv_names)
-d = {}
-mm.indiv_pop = pd.DataFrame(d)
+mm.list_indiv_pop_pars = ['thalf']
+mm.descrip_name['thalf'] = 'virion infective halflife'
+init_vecs = [
+    [0.36, 0.42,
+     0.34, 0.28,
+     0.23, 0.25,
+     0.23, 0.23],
+]
+d = dict(zip(mm.list_indiv_pop_pars, init_vecs))
+mm.indiv_pop = pd.DataFrame(d, index=mm.indiv_names)
 #
 #--- INDIV_NOPOP (Individual parameters not distributed by population)
 #
@@ -104,6 +98,10 @@ mm.indiv_pop = pd.DataFrame(d)
 #
 mm.list_indiv_nopop_pars = ['A', 'B']
 #
+# order is [act, ecm, ecp, rest] within [A, B, thalf]
+#
+# guess values taken from xmgrace fits (2017-05-08 analysis)
+#    (thalf = log(2) / c)
 #
 init_vecs = [
     [10736, 24900,
@@ -137,16 +135,34 @@ mm.transf_print['B'] = 'none'
 #    For each parameter in "list_indiv_pop_pars", specify a
 #    distribution, with parameters, priors, and transformations
 #
-#          <none>
+#       * for a lognormally-distributed quantity, both the mean
+#         and the stdev (log(widthfac)) should be log-transformed
+#         for mcmc, since both should remain positive.
+#
+#
+mm.pop_dist['thalf'] = 'lognormal'
+mm.pop['thalf_mean'] = 0.5
+mm.prior_dist['thalf_mean'] = 'lognormal'
+mm.prior_mean['thalf_mean'] = 0.1
+mm.prior_stdev['thalf_mean'] = np.log(5.0)
+mm.transf_mcmc['thalf_mean'] = 'log'
+mm.transf_plot['thalf_mean'] = 'none'
+mm.transf_print['thalf_mean'] = 'none'
+mm.pop['thalf_stdev'] = np.log(1.5)
+mm.prior_dist['thalf_stdev'] = 'lognormal'
+mm.prior_mean['thalf_stdev'] = np.log(1.5)
+mm.prior_stdev['thalf_stdev'] = np.log(5.0)
+mm.transf_mcmc['thalf_stdev'] = 'log'
+mm.transf_plot['thalf_stdev'] = 'none'
+mm.transf_print['thalf_stdev'] = 'none'
 #
 #--- OTHER (other pars, e.g., those associated to error-model)
 #
 #    In this model hypothesis we have:
 #
 #        'sigma': common log-normal error stdev for all individuals
-#        'thalf': common virion half-life
 #
-mm.list_other_pars = ['sigma', 'thalf']
+mm.list_other_pars = ['sigma']
 mm.descrip_name['sigma'] = 'common data lognormal-error'
 mm.other['sigma'] = 2.0
 # prior and transformation for sigma    
@@ -158,15 +174,6 @@ mm.prior_max['sigma'] = 50.0
 mm.transf_mcmc['sigma'] = 'log'
 mm.transf_plot['sigma'] = 'log'
 mm.transf_print['sigma'] = 'none'
-# common halflife
-mm.other['thalf'] = 0.3
-mm.descrip_name['thalf'] = "virion infectious halflife"
-mm.prior_dist['thalf'] = 'lognormal'
-mm.prior_mean['thalf'] = 0.1
-mm.prior_stdev['thalf'] = np.log(5.0)
-mm.transf_mcmc['thalf'] = 'log'
-mm.transf_plot['thalf'] = 'none'
-mm.transf_print['thalf'] = 'none'
 #
 #=== IMPORTANT PARAMETERS (non-nuisance) for plotting
 #
@@ -175,7 +182,7 @@ mm.transf_print['thalf'] = 'none'
 #
 #             [<pop pars>, sigma]
 #
-important_pars = ['thalf', 'sigma']
+important_pars = ['thalf_mean', 'thalf_stdev', 'sigma']
 ind_important_pars = None  # to be set below
 
 def get_log_likelihood():

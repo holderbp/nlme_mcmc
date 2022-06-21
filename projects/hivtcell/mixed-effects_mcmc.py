@@ -26,8 +26,9 @@ import module_mixed_effects_model as mm
 #     module_<project>_modhyp_<subproject-name>_<model-hyp-name>
 #
 #==============================================================
-import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
+#import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
 #import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_thalf_COM_sigma as mod
+import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
 #==============================================================
 #//////////////////////////////////////////////////////////////
 
@@ -185,7 +186,7 @@ mm.mcmc_thin_by = 0.5 # keep data at only every XX autocorrelation times
 # pars for performing a multivariate normal fit to the
 # current posterior to implement Gelfand and Dey's correction
 # to the harmonic mean of the likelihood estimator
-mm.ml_fac_to_make_smooth = 100   # more samples than posterior
+mm.ml_fac_to_make_smooth = 10   # more samples than posterior
 mm.ml_fac_to_reduce_sigma = 2    # skinnier than posterior
 #==============================================================
 #//////////////////////////////////////////////////////////////
@@ -502,7 +503,7 @@ a, b = mm.calc_marg_like(flat_samples, flat_samples_loglike,
 print(dividerstr)
 print("Saving cornerplot figures to\n\t" + cornerplotimp_fig_file
       + "\n\t" + cornerplotall_fig_file)
-figCI.savefig(cornerplotimp_fig_file)
-figCA.savefig(cornerplotall_fig_file)
+figCI.savefig(mm.cornerplotimp_fig_file)
+figCA.savefig(mm.cornerplotall_fig_file)
 #==============================================================
 #//////////////////////////////////////////////////////////////

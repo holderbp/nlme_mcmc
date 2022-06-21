@@ -586,7 +586,7 @@ def get_log_prior():
                                              indiv_pop[p].to_numpy())
         elif (pop_dist[p] == 'lognormal'):
             log_prior += get_normal_logprior(np.log(pop[p+'_mean']),
-                                             np.log(pop[p+'_stdev'])**2,
+                                             pop[p+'_stdev']**2,
                                              np.log(indiv_pop[p].to_numpy()) )
     # get prior values of INDIV_NOPOP pars
     for p in list_indiv_nopop_pars:
@@ -595,7 +595,7 @@ def get_log_prior():
                                 indiv_nopop[p].to_numpy())
         elif (prior_dist[p] == 'lognormal'):
             log_prior += get_normal_logprior(np.log(prior_mean[p]),
-                                             np.log(prior_stdev[p])**2,
+                                             prior_stdev[p]**2,
                                              np.log(indiv_nopop[p].to_numpy()))
         elif ( prior_dist[p] == 'uniform'):
             log_prior += get_uniform_logprior(prior_min[p], prior_max[p],
@@ -608,7 +608,7 @@ def get_log_prior():
                                                  prior_stdev[p+s]**2, pop[p+s])
             elif (prior_dist[p+s] == 'lognormal'):
                 log_prior += get_normal_logprior(np.log(prior_mean[p+s]),
-                                                 np.log(prior_stdev[p+s])**2,
+                                                 prior_stdev[p+s]**2,
                                                  np.log(pop[p+s]))
             elif (prior_dist[p+s] == 'uniform'):
                 log_prior += get_uniform_logprior(prior_min[p+s],
@@ -620,7 +620,7 @@ def get_log_prior():
                                              other[p])
         elif (prior_dist[p] == 'lognormal'):
             log_prior += get_normal_logprior(np.log(prior_mean[p]),
-                                             np.log(prior_stdev[p])**2,
+                                             prior_stdev[p]**2,
                                              np.log(other[p]))
         elif (prior_dist[p] == 'uniform'):
             log_prior += get_uniform_logprior(prior_min[p], prior_max[p], other[p])
