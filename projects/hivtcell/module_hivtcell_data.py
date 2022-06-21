@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 import matplotlib.backends.backend_pdf as mplbp
 import matplotlib.pyplot as plt
 import seaborn as sns

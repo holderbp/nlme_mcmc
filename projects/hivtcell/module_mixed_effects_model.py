@@ -9,7 +9,7 @@ import scipy.spatial as spspat
 import emcee
 import corner
 import matplotlib
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import multiprocessing as mp
 
