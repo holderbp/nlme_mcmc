@@ -22,7 +22,8 @@ import module_mixed_effects_model as mm
 #   the parameters in the sample are correctly identified.
 #                                                              
 #==============================================================
-import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
+#import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
+import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
 #//////////////////////////////////////////////////////////////
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\

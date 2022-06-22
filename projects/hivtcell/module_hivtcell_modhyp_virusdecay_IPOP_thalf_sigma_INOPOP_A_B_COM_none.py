@@ -29,7 +29,7 @@ data_analysis_subproject = 'virus-decay'
 #           Random effects for m and b (single distribution, no cov)
 #           common normal error (stdev) in data about model, sigma
 #
-model_hyp = 'IPOP-thalf_INOPOP-A-B_COM-sigma'
+model_hyp = 'IPOP-thalf-sigma_INOPOP-A-B_COM-none'
 #
 #=== Load data into the data module and get the following
 #    parameters and parameter objects (to be stored in the
@@ -81,13 +81,15 @@ plot_with_print_transformation=False
 #    individual are:
 #
 widthfac = 5.0
-mm.list_indiv_pop_pars = ['thalf']
+mm.list_indiv_pop_pars = ['thalf', 'sigma']
 mm.descrip_name['thalf'] = 'virion infective halflife'
+mm.descrip_name['sigma'] = 'lognormal error stdev'
 init_vecs = [
     [0.36, 0.42,
      0.34, 0.28,
      0.23, 0.25,
      0.23, 0.23],
+    2.0*np.ones(8)
 ]
 d = dict(zip(mm.list_indiv_pop_pars, init_vecs))
 mm.indiv_pop = pd.DataFrame(d, index=mm.indiv_names)
@@ -139,7 +141,7 @@ mm.transf_print['B'] = 'none'
 #         and the stdev (log(widthfac)) should be log-transformed
 #         for mcmc, since both should remain positive.
 #
-#
+# halflife
 mm.pop_dist['thalf'] = 'lognormal'
 mm.pop['thalf_mean'] = 0.5
 mm.prior_dist['thalf_mean'] = 'lognormal'
@@ -155,25 +157,28 @@ mm.prior_stdev['thalf_stdev'] = np.log(5.0)
 mm.transf_mcmc['thalf_stdev'] = 'log'
 mm.transf_plot['thalf_stdev'] = 'none'
 mm.transf_print['thalf_stdev'] = 'none'
+# error
+mm.pop_dist['sigma'] = 'lognormal'
+mm.pop['sigma_mean'] = 2.0
+mm.prior_dist['sigma_mean'] = 'lognormal'
+mm.prior_mean['sigma_mean'] = 2.0
+mm.prior_stdev['sigma_mean'] = np.log(2.0)
+mm.transf_mcmc['sigma_mean'] = 'log'
+mm.transf_plot['sigma_mean'] = 'none'
+mm.transf_print['sigma_mean'] = 'none'
+mm.pop['sigma_stdev'] = np.log(1.5)
+mm.prior_dist['sigma_stdev'] = 'lognormal'
+mm.prior_mean['sigma_stdev'] = np.log(1.5)
+mm.prior_stdev['sigma_stdev'] = np.log(2.0)
+mm.transf_mcmc['sigma_stdev'] = 'log'
+mm.transf_plot['sigma_stdev'] = 'none'
+mm.transf_print['sigma_stdev'] = 'none'
 #
 #--- OTHER (other pars, e.g., those associated to error-model)
 #
 #    In this model hypothesis we have:
 #
-#        'sigma': common log-normal error stdev for all individuals
-#
-mm.list_other_pars = ['sigma']
-mm.descrip_name['sigma'] = 'common data lognormal-error'
-mm.other['sigma'] = np.log(2.0)
-# prior and transformation for sigma    
-mm.prior_dist['sigma'] = 'lognormal'
-mm.prior_mean['sigma'] = np.log(2.0)
-mm.prior_stdev['sigma'] = np.log(5.0)
-mm.prior_min['sigma'] = 0.1
-mm.prior_max['sigma'] = 50.0
-mm.transf_mcmc['sigma'] = 'log'
-mm.transf_plot['sigma'] = 'log'
-mm.transf_print['sigma'] = 'none'
+mm.list_other_pars = []
 #
 #=== IMPORTANT PARAMETERS (non-nuisance) for plotting
 #
@@ -182,7 +187,7 @@ mm.transf_print['sigma'] = 'none'
 #
 #             [<pop pars>, sigma]
 #
-important_pars = ['thalf_mean', 'thalf_stdev', 'sigma']
+important_pars = ['thalf_mean', 'thalf_stdev', 'sigma_mean', 'sigma_stdev']
 ind_important_pars = None  # to be set below
 
 def get_log_likelihood():
@@ -194,11 +199,6 @@ def get_log_likelihood():
     #--- Error model
     #
     # for this model-hypothesis, we assume:
-    #
-    #   log-normally-distributed error with
-    #   common variance for all data sets
-    #
-    sigmasqrd = mm.other['sigma']**2
     #
     # but you could have individualized values (set within
     # the mm.indiv_names loop below):
@@ -219,6 +219,10 @@ def get_log_likelihood():
     log_like = 0.0
     for i in mm.indiv_names:
         for em in mm.evolve_models_for_indiv[i]:
+            #
+            # Errors are individualized
+            #
+            sigmasqrd = mm.indiv_pop.at[i, 'sigma']**2
             #
             # Run the evolve-model and receive a dictionary
             # of np arrays with Ymodel values

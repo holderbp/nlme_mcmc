@@ -29,7 +29,7 @@ data_analysis_subproject = 'virus-decay'
 #           Random effects for m and b (single distribution, no cov)
 #           common normal error (stdev) in data about model, sigma
 #
-model_hyp = 'no-RE-all-cells-common-sigma-and-thalf'
+model_hyp = 'IPOP-none_INOPOP-A-B_COM-sigma-thalf'
 #
 #=== Load data into the data module and get the following
 #    parameters and parameter objects (to be stored in the
@@ -151,7 +151,7 @@ mm.descrip_name['sigma'] = 'common data lognormal-error'
 mm.other['sigma'] = 2.0
 # prior and transformation for sigma    
 mm.prior_dist['sigma'] = 'lognormal'
-mm.prior_mean['sigma'] = 2.0
+mm.prior_mean['sigma'] = np.log(2.0)
 mm.prior_stdev['sigma'] = np.log(5.0)
 mm.prior_min['sigma'] = 0.1
 mm.prior_max['sigma'] = 50.0
@@ -191,7 +191,7 @@ def get_log_likelihood():
     #   log-normally-distributed error with
     #   common variance for all data sets
     #
-    logsigmasqrd = (np.log(mm.other['sigma']) )**2
+    sigmasqrd = mm.other['sigma']**2
     #
     # but you could have individualized values (set within
     # the mm.indiv_names loop below):
@@ -232,8 +232,8 @@ def get_log_likelihood():
                 log_like += \
                     -0.5*np.sum( (np.log(mm.yvals_for_indiv[i][em][d])
                                   - np.log(ymod))**2 \
-                                 / logsigmasqrd
-                                 + np.log(2.0 * np.pi * logsigmasqrd) )
+                                 / sigmasqrd
+                                 + np.log(2.0 * np.pi * sigmasqrd) )
     return log_like
 
 #======================================================================#

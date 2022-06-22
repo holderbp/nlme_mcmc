@@ -12,7 +12,8 @@ import seaborn as sns
 #   the parameters in the sample are correctly identified.
 #                                                              
 #==============================================================
-import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
+#import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
+import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
 #//////////////////////////////////////////////////////////////
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -43,7 +44,7 @@ light_red = sns.color_palette('RdBu')[2]
 #  Npoints: <number of points in each fit-model dataset>
 #
 plotpars = {
-    'plot_type' : '68-95CI_region',
+    'plot_type' : 'only_data', #'68-95CI_region',
     'Npoints' : 1000,
     'Nsamp' : 1000,  # set to None for all (might use less for spaghetti)
     'plot_median' : True,

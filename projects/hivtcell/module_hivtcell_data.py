@@ -456,12 +456,20 @@ def plot_data(ppars):
             theaxis[ecp2] = {}
             theaxis[ecp2][em] = {}
             theaxis[ecp2][em][ds] = axes2[1,1]            
-            #-------------------------------------------------------
-            #
-            #         No further adjustment should be needed
-            #
-            #-------------------------------------------------------
-            plot_posterior_over_model(ppars, theaxis)
+            #=== do the plotting of models over data
+            plot_posterior_over_data(ppars, theaxis)
+    else:
+        #
+        # put other data_analysis_subproject possibilities above in elif blocks
+        #
+        print("***Error: data analysis subproject \"" + data_analysis_subproject
+              + "\" not recognized.")
+        exit(0)
+    #-------------------------------------------------------
+    #
+    #         No further adjustment should be needed
+    #
+    #-------------------------------------------------------
     #
     #=== set logscale
     #
@@ -505,7 +513,7 @@ def make_hidden_axis(fig, xlabel, ylabel):
     plt.ylabel(ylabel, fontsize=20, labelpad=10)
     return ax
 
-def plot_posterior_over_model(ppars, theaxis):
+def plot_posterior_over_data(ppars, theaxis):
     if (ppars['plot_type'] == 'median'):
         # plot just the median of the samples
         for i in indiv_names:

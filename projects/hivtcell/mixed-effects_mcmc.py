@@ -26,9 +26,10 @@ import module_mixed_effects_model as mm
 #     module_<project>_modhyp_<subproject-name>_<model-hyp-name>
 #
 #==============================================================
-#import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
 #import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_thalf_COM_sigma as mod
+#import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
 import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
+#import module_hivtcell_modhyp_virusdecay_IPOP_thalf_sigma_INOPOP_A_B_COM_none as mod
 #==============================================================
 #//////////////////////////////////////////////////////////////
 
@@ -397,7 +398,6 @@ elif (runmode == 'analysis'):
 #==============================================================
 #          Post-processing (or 'analysis' processing)
 #==============================================================
-
 #
 #--- Output autocorrelation times for each parameter
 #
@@ -409,7 +409,6 @@ else:
     taus = mm.get_autocorrelation_times(sampler)
 print("Sampler autocorrelation times are:")
 mm.print_autocorrelation_times(taus)
-
 #
 #--- Flatten the samples into single list of samples from posterior, and:
 #
@@ -423,7 +422,6 @@ print("Preparing a set of independent samples.")
  flat_samples_logprior, burnin, thin] = \
      mm.get_flattened_samples(taus, sampler)
 print(f"\tDiscarded a burn-in of {burnin:d} and thinned by {thin:d}")
-
 #
 #--- Find the largest posterior values and compare to
 #    the max-posterior value found earlier
@@ -431,7 +429,6 @@ print(f"\tDiscarded a burn-in of {burnin:d} and thinned by {thin:d}")
 print(dividerstr)
 mm.get_top_posterior_values_and_compare(flat_samples_logprob,
                                         flat_samples, pars_MAP)
-
 #
 #--- Transform the samples (for printing and plotting)
 #
@@ -445,13 +442,11 @@ for i in range(len(flat_samples)):
     flat_samples_transformed_plot.append(mod.get_pars('plot'))
 flat_samples_transformed_print = np.array(flat_samples_transformed_print)
 flat_samples_transformed_plot = np.array(flat_samples_transformed_plot)
-
 #
 #--- Output median + 68% percentiles
 #
 print(dividerstr)
 mm.print_percentiles(flat_samples_transformed_print, [16, 50, 84])
-
 #
 #--- Make corner plots (of "important" and "all" parameters
 #
@@ -461,7 +456,6 @@ pars_MAP_transformed = mod.get_pars('plot')
 print("Creating cornerplots of \"important\" and all parameters...")
 figCI, figCA = mm.get_corner_plots(flat_samples_transformed_plot,
                                    pars_MAP_transformed)
-
 #
 #--- Get a multivariate normal fit to the posterior (MVN)
 #
@@ -472,7 +466,6 @@ print(dividerstr)
 print("Getting the best-fit multivariate normal to the posterior")
 mvn, mvn_samples = \
     mm.get_bestfit_mvn(flat_samples)
-
 #
 #--- Transform the MVN samples for plotting on cornerplot
 #
@@ -483,26 +476,23 @@ for i in range(len(mvn_samples)):
     mod.set_pars(mvn_samples[i])
     mvn_samples_transformed.append(mod.get_pars('plot'))
 mvn_samples_transformed = np.array(mvn_samples_transformed)
-
 #
 #--- Overplot the MVN on the cornerplt
 #
 ndim = len(flat_samples[0])
 mm.overplot_mvn_on_cornerplots(figCI, figCA, mvn_samples_transformed, ndim)
-
 #
 #--- Calculate marginal likelihood and print to user
 #
 print(dividerstr)
 a, b = mm.calc_marg_like(flat_samples, flat_samples_loglike,
                          flat_samples_logprior, mvn)
-
 #
 #--- Save figures
 #
 print(dividerstr)
-print("Saving cornerplot figures to\n\t" + cornerplotimp_fig_file
-      + "\n\t" + cornerplotall_fig_file)
+print("Saving cornerplot figures to\n\t" + mm.cornerplotimp_fig_file
+      + "\n\t" + mm.cornerplotall_fig_file)
 figCI.savefig(mm.cornerplotimp_fig_file)
 figCA.savefig(mm.cornerplotall_fig_file)
 #==============================================================
