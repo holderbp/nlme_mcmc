@@ -48,6 +48,8 @@ other = None         # dictionary
 data_sets = {
     'virus-decay-moi' : ['virus_decay_count_inf',
                          ],
+    'uninfected-timeseries': ['uninf_count_tot',
+                              'uninf_count_dead'],
 }
 #-------------------------------------------------------
 #
@@ -56,6 +58,8 @@ data_sets = {
 #-------------------------------------------------------
 evolve_model = {
     'virus_decay_count_inf' : 'virus-decay-moi',
+    'uninf_count_tot' : 'uninfected-timeseries',
+    'uninf_count_dead' : 'uninfected-timeseries',
 }
 # 
 #--- The data for each individual

@@ -12,8 +12,18 @@ import seaborn as sns
 #   the parameters in the sample are correctly identified.
 #                                                              
 #==============================================================
+#
+#=== virus-decay 
+#
+#import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_thalf_COM_sigma as mod
 #import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
-import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
+#import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
+#import module_hivtcell_modhyp_virusdecay_IPOP_thalf_sigma_INOPOP_A_B_COM_none as mod
+import module_hivtcell_modhyp_virusdecay_IPOP_sigma_INOPOP_A_B_COM_thalf as mod
+#
+#=== uninfected timeseries 
+#
+
 #//////////////////////////////////////////////////////////////
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -44,13 +54,27 @@ light_red = sns.color_palette('RdBu')[2]
 #  Npoints: <number of points in each fit-model dataset>
 #
 plotpars = {
-    'plot_type' : 'only_data', #'68-95CI_region',
+    'plot_type' : '68-95CI_region',
     'Npoints' : 1000,
     'Nsamp' : 1000,  # set to None for all (might use less for spaghetti)
     'plot_median' : True,
     'color_dark' : dark_blue,
     'color_light': light_blue,
 }
+
+def get_modhyp_from_filename(filename):
+    # file should be:
+    #
+    #  output/YYYY-mm-dd_HHMM_samples_project_subproject_the_mod-hyp.dat
+    #
+    list_parts = filename.split('_')
+    lp = np.array(list_parts)[5:]
+    modhyp = ""
+    for i in range(len(lp)):
+        modhyp += lp[i] + '_'
+    modhyp = modhyp.split('.')[0]
+    return modhyp
+
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 #==============================================================
 #                      File Handling
@@ -77,7 +101,8 @@ else:
 #
 #--- Check that the model hypothesis of the samples matches
 #    that of the imported mod-hyp module
-modhyp = plotpars['sample_file'].split('_')[-1].split('.')[0]
+modhyp = get_modhyp_from_filename(plotpars['sample_file'])
+plotpars['sample_file'].split('_')[-1].split('.')[0]
 print("\nModel Hypothesis [mod-hyp module] = " + mod.model_hyp)
 print("Model Hypothesis [samples]        = " + modhyp)
 if (modhyp != mod.model_hyp):

@@ -28,8 +28,9 @@ import module_mixed_effects_model as mm
 #==============================================================
 #import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_thalf_COM_sigma as mod
 #import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
-import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
+#import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
 #import module_hivtcell_modhyp_virusdecay_IPOP_thalf_sigma_INOPOP_A_B_COM_none as mod
+import module_hivtcell_modhyp_virusdecay_IPOP_sigma_INOPOP_A_B_COM_thalf as mod
 #==============================================================
 #//////////////////////////////////////////////////////////////
 
