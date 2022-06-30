@@ -287,7 +287,8 @@ def get_index_important_and_discrete_pars():
     global ind_important_pars, important_pars, ind_discrete_pars
     if ind_important_pars is None:
         # Find the indices of the important parameters in the numpy vector 
-        parnames = list(mm.give_vec_for(mm.transf_print, justnames=True))
+        parnames = list(mm.give_vec_for(mm.transf_print,
+                                        justnames=True, shortnames=True))
         max_imp = np.min([5, len(parnames)])
         if (len(important_pars) < max_imp):
             print(f"\t(well...there were only {len(important_pars):d} ", end='')
@@ -305,7 +306,8 @@ def get_index_important_and_discrete_pars():
                 ind_important_pars.append(inds[i])
             ind_important_pars = np.array(ind_important_pars)
             important_pars = \
-                mm.give_vec_for(mm.transf_print, justnames=True)[ind_important_pars]
+                mm.give_vec_for(mm.transf_print, justnames=True,
+                                shortnames=True)[ind_important_pars]
         else:
             ind_important_pars = []
             for p in important_pars:
@@ -332,28 +334,22 @@ def set_pars(theta):
     """
     mm.take_vec_from_mcmc(theta)
 
-def get_pars(transf_type, justnames=False):
+def get_pars(transf_type, justnames=False, shortnames=False):
     """
     Public method for getting the parameters and the parameter names
     from the mod-hyp module. (Called by mcmc_mixed-effects.py)
     """
     if ( (transf_type == 'print')
          | ( (transf_type == 'plot') & (plot_with_print_transformation) ) ):
-        if justnames:
-            return mm.give_vec_for(mm.transf_print, justnames=True)
-        else:
-            return mm.give_vec_for(mm.transf_print, justnames=False)
+        return mm.give_vec_for(mm.transf_print,
+                               justnames=justnames, shortnames=shortnames)
     elif (transf_type == 'plot'):
-        if justnames:
-            return mm.give_vec_for(mm.transf_plot, justnames=True)
-        else:
-            return mm.give_vec_for(mm.transf_plot, justnames=False)        
+        return mm.give_vec_for(mm.transf_plot,
+                               justnames=justnames, shortnames=shortnames)
     elif (transf_type == 'mcmc'):
-        if justnames:
-            return mm.give_vec_for(mm.transf_mcmc, justnames=True)
-        else:
-            return mm.give_vec_for(mm.transf_mcmc, justnames=False)        
-
+        return mm.give_vec_for(mm.transf_mcmc,
+                               justnames=justnames, shortnames=shortnames)
+    
 def log_like_and_prior(theta):
     """
     Public method called by mcmc_mixed-effects to return both 

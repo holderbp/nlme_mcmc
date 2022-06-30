@@ -1067,19 +1067,19 @@ def plot_and_save_chains(sampler, tau_max):
     for p in range(npars):
         page = p // plots_per_page
         r = p % plots_per_page
-        plt.figure(figs[page])
+        plt.figure(page)
         ax = axs[page][r]
         ax.plot(samples[:, :, p], "k", alpha=0.3)        
         ax.set_xlim(0, len(samples))
         ax.set_ylabel(par_names_mcmc_short[p])
         ax.yaxis.set_label_coords(-0.1, 0.5)
     for n in range(npages):
-        plt.figure(figs[n])
+        plt.figure(n)
         axs[n][-1].set_xlabel(f"step number (of last {Npoints:d})")
     # put into multi-page pdf
     with mplbp.PdfPages(chains_fig_file) as pdf:
-        for p in figs:
-            plt.figure(p)
+        for n in range(npages):
+            plt.figure(n)
             plt.tight_layout()
             pdf.savefig()
             plt.close()
@@ -1124,19 +1124,19 @@ def plot_and_save_samples(sampler, tau_max):
     for p in range(npars):
         page = p // plots_per_page
         r = p % plots_per_page
-        plt.figure(figs[page])
+        plt.figure(page)
         ax = axs[page][r]
         ax.scatter(np.arange(0, Npoints), flat_samples[-1*Npoints:,p], s=0.5)
         ax.set_xlim(0, Npoints)
         ax.set_ylabel(par_names_mcmc_short[p])
         ax.yaxis.set_label_coords(-0.1, 0.5)
     for n in range(npages):
-        plt.figure(figs[n])
+        plt.figure(n)
         axs[n][-1].set_xlabel(f"steps / thin (last {Npoints:d} samples)")
     # put into multi-page pdf
     with mplbp.PdfPages(samples_fig_file) as pdf:
-        for p in figs:
-            plt.figure(p)
+        for n in range(npages):
+            plt.figure(n)
             plt.tight_layout()
             pdf.savefig()
             plt.close()
