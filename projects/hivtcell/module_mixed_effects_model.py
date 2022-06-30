@@ -1163,14 +1163,14 @@ def plot_and_save_samples(sampler, tau_max):
         page = p // plots_per_page
         r = (p % plots_per_page) // nrows
         c = (p % plots_per_page) % nrows
-        plt.figure(figs[page])
+        plt.figure(page)
         ax = axs[page][r,c]
         sns.histplot(data = flat_samples[-1*Npoints:, p], ax=ax)
         ax.set_xlabel(par_names_mcmc_short[p])
     # put into multi-page pdf
     with mplbp.PdfPages(samples_hist_file) as pdf:
-        for p in figs:
-            plt.figure(p)
+        for n in range(npages):        
+            plt.figure(n)
             plt.tight_layout()
             pdf.savefig()
             plt.close()
