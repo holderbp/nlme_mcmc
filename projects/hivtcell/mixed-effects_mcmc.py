@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import functools
 import datetime as dt
+import emcee
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 #==============================================================
@@ -26,11 +27,20 @@ import module_mixed_effects_model as mm
 #     module_<project>_modhyp_<subproject-name>_<model-hyp-name>
 #
 #==============================================================
+#
+#=== Virus decay
+#
 #import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_thalf_COM_sigma as mod
 #import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
 #import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
 #import module_hivtcell_modhyp_virusdecay_IPOP_thalf_sigma_INOPOP_A_B_COM_none as mod
-import module_hivtcell_modhyp_virusdecay_IPOP_sigma_INOPOP_A_B_COM_thalf as mod
+#import module_hivtcell_modhyp_virusdecay_IPOP_sigma_INOPOP_A_B_COM_thalf as mod
+#
+#=== uninfected timeseries
+#
+#import module_hivtcell_modhyp_ecp_uninf_timeseries_IPOP_none_INOPOP_N_tauT_tD_COM_none_CONST_nT as mod
+#import module_hivtcell_modhyp_ecp_uninf_timeseries_IPOP_none_INOPOP_N_tauT_tD_COM_sigma_CONST_nT as mod
+import module_hivtcell_modhyp_ecp_uninf_timeseries_IPOP_none_INOPOP_N_tauT_nT_tD_COM_sigma_CONST_s as mod
 #==============================================================
 #//////////////////////////////////////////////////////////////
 
@@ -100,6 +110,19 @@ mm.mcmc_do_backend = False
 # backend file for restart/analysis
 #   (within the chains directory, defined below)
 mm.mcmc_existing_chain_file = ""
+#
+#--- change the moves (default (None) is stretch w/ a=2.0)
+#
+#      'default' - stretch w/ a=2.0
+#      'stretch_5.0' - stretch w/ a=5.0
+#
+#
+mcmc_moves = None  # default (stretch, a=2)
+#mcmc_moves = emcee.moves.StretchMove(a=1.2)
+#mcmc_moves = [
+#        (emcee.moves.DEMove(), 0.8),
+#        (emcee.moves.DESnookerMove(), 0.2),
+#    ]
 #
 #--- do parallel processing
 #
@@ -171,9 +194,13 @@ mm.mcmc_skip_initial_state_check = False
 #
 #  * Burn-in and Thin parameters for getting independent samples from chain
 #
-# number of walkers is set below after mod-hyp module is initialized
-mm.mcmc_N_walkers = None
-mm.mcmc_N_steps_max = 500000
+# number of walkers
+#
+#    if None, then set below after mod-hyp module is initialized with:
+#          mm.mcmc_N_walkers = int( ncpu * ceil( 2 * npars / ncpu) )
+#
+mm.mcmc_N_walkers = 100
+mm.mcmc_N_steps_max = 1000000
 mm.mcmc_N_steps_restart = 20000 # for restarting a chain (mcmc_run_to_convergence = False)
 mm.mcmc_initial_bundle_fractional_width = 1e-1
 mm.mcmc_burnin_drop = 2 # in number of autocorrelation times
@@ -190,20 +217,10 @@ mm.mcmc_thin_by = 0.5 # keep data at only every XX autocorrelation times
 # to the harmonic mean of the likelihood estimator
 mm.ml_fac_to_make_smooth = 10   # more samples than posterior
 mm.ml_fac_to_reduce_sigma = 2    # skinnier than posterior
+mm.ml_plot_only_GD = True # don't plot the harmonic mean
 #==============================================================
 #//////////////////////////////////////////////////////////////
 
-
-#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-#==============================================================
-#        Info on important (non-nuisance) parameters
-#==============================================================
-# all set below after mod-hyp module initializes
-mm.ind_imp_pars = None
-mm.imp_par_names_print = None
-mm.imp_par_names_plot = None
-mm.imp_par_names_mcmc = None
-mm.N_imp_pars = None
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 #==============================================================
@@ -300,6 +317,7 @@ if (mm.mcmc_existing_chain_file == ""):
     print("\t<none>")
 else:
     print("\t" + mm.mcmc_existing_chain_file)
+print("Moves = " + str(mcmc_moves))
 print("Multiprocessing = " + str(mm.mcmc_do_multiprocessing))
 print("\tmcmc_ncpus_to_use = " + str(mm.mcmc_ncpus_to_use))
 print("mcmc_run_to_convergence = " + str(mm.mcmc_run_to_convergence))
@@ -323,8 +341,9 @@ initial_theta = mod.initialize(indentstr="  ", dividerstr=dividerstr)
 print(dividerstr)
 #
 #--- Set the number of walkers based on the number of parameters (and cpus)
-# 
-mm.mcmc_N_walkers = int( mm.ncpu * np.ceil( 2 * len(initial_theta) / mm.ncpu) )
+#
+if (mm.mcmc_N_walkers == None):
+    mm.mcmc_N_walkers = int( mm.ncpu * np.ceil( 2 * len(initial_theta) / mm.ncpu) )
 print("mcmc_N_walkers = " + str(mm.mcmc_N_walkers))
 #
 #--- Get the parameter names and, specifically, the indices,
@@ -333,12 +352,16 @@ print("mcmc_N_walkers = " + str(mm.mcmc_N_walkers))
 mm.par_names_print = mod.get_pars('print', justnames=True)
 mm.par_names_plot = mod.get_pars('plot', justnames=True)
 mm.par_names_mcmc = mod.get_pars('mcmc', justnames=True)
-mm.ind_imp_pars = mod.get_ind_imp_pars()
-mm.imp_par_names_print = mm.par_names_print[mm.ind_imp_pars]
-mm.imp_par_names_plot = mm.par_names_plot[mm.ind_imp_pars]
-mm.imp_par_names_mcmc = mm.par_names_mcmc[mm.ind_imp_pars]
-mm.N_imp_pars = len(mm.ind_imp_pars)    
+mm.ind_important_pars, mm.ind_discrete_pars = \
+    mod.get_index_important_and_discrete_pars()
+mm.imp_par_names_print = mm.par_names_print[mm.ind_important_pars]
+if len(mm.ind_discrete_pars > 0):
+    mm.discrete_par_names = mm.par_names_print[mm.ind_discrete_pars]
+mm.imp_par_names_plot = mm.par_names_plot[mm.ind_important_pars]
+mm.imp_par_names_mcmc = mm.par_names_mcmc[mm.ind_important_pars]
+mm.N_imp_pars = len(mm.ind_important_pars)    
 print("Important parameters to track are:\n", mm.imp_par_names_print)
+print("Discrete parameters are:\n", mm.discrete_par_names)
 
 #
 #--- Find the maximum of the posterior function (or likelihood)
@@ -378,7 +401,7 @@ if (runmode == 'newrun'):
         backend = mm.create_backend()
     else:
         backend = None
-    sampler, n_dim = mm.run_mcmc_sampler(pars_MAP, backend)
+    sampler, n_dim = mm.run_mcmc_sampler(pars_MAP, mcmc_moves, backend)
 elif (runmode == 'restart'):
     # print info to user
     print("Loading backend from " + mm.file_chain + " with:")
@@ -386,7 +409,8 @@ elif (runmode == 'restart'):
     new_backend = emcee.backends.HDFBackend(mm.file_chain)
     (Nsteps, Nchains, Npars) = sampler.get_chain().shape
     print(f"\tNsteps, Nchains, Npars = {Nsteps:d}, {Nchains:d}, {Npars:d}")
-    sampler, n_dim = mm.run_mcmc_sampler(pars_MAP, new_backend, restart=True)    
+    sampler, n_dim = mm.run_mcmc_sampler(pars_MAP, mcmc_moves, new_backend,
+                                         restart=True)    
 elif (runmode == 'analysis'):
     # print info to user
     print("Loading backend from " + mm.file_chain + " with:")

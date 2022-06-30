@@ -77,18 +77,25 @@ mcmc_burnin_drop = None
 mcmc_thin_by = None
 
 #=== Marginal likelihood calculation
+ml_plot_only_GD = None
 ml_fac_to_make_smooth = None
 ml_fac_to_reduce_sigma = None
 
-#=== Info on parameters, and important (non-nuisance) parameters
+#
+#=== Info on parameters
+#
 par_names_print = None
 par_names_plot = None
 par_names_mcmc = None
-ind_imp_pars = None
+#  important (non-nuisance) parameters
+ind_important_pars = None
 imp_par_names_print = None
 imp_par_names_plot = None
 imp_par_names_mcmc = None
 N_imp_pars = None
+#  discrete parameters
+ind_discrete_pars = None
+discrete_par_names = None
 
 #=== Figure/Plotting options
 cornerplot_plot_maxvals = None
@@ -278,6 +285,92 @@ other = {}
 #
 #==============================================================
 
+def get_normal_loglike(yvals, ymod, var):
+    return -0.5 * np.sum( (yvals - ymod)**2 / var + np.log(2.0 * np.pi * var) )
+
+def get_lognormal_loglike(yvals, ymod, var):
+    # exclude zero values
+    good = ( (yvals > 0) & (ymod > 0) )
+    return -0.5 * np.sum( (np.log(yvals[good]) - np.log(ymod[good]) )**2
+                          / var + np.log(2.0 * np.pi * var) )
+
+def get_poisson_loglike(yvals, ymod):
+    #
+    # Use special degenerate poisson if model (lambda par) is zero
+    #
+    #              /  1   (i=0)
+    #    pmf(i) = {
+    #              \  0   (otherwise)
+    #
+    # which follows from 0^0 = 1
+    #
+    zero = (ymod == 0)
+    if np.any(yvals[zero] > 0):
+        return -np.inf
+    #
+    # Otherwise, use normal if model values are large
+    #
+    retval = 0.0
+    large = (ymod > 1000)
+    retval += get_normal_loglike(yvals[large], ymod[large], ymod[large])
+    #
+    # and use regular poisson when model values are smaller
+    #
+    #    pmf(i) = exp(-lambda) * lambda^i / i!
+    #
+    # where we can write i! = gamma(i+1)
+    #
+    small = ~large & ~zero 
+    yv = np.round(yvals[small]).astype(int)
+    retval += np.sum( yv * np.log(ymod[small]) - ymod[small] - spsp.gammaln(yv + 1) )
+    # return the result
+    return retval
+
+def get_index_important_and_discrete_pars():
+    """
+    Public method for getting the numpy vector indices of those
+    parameters that are considered "important" (non-nuisance).
+    """
+    global ind_important_pars, important_pars, ind_discrete_pars
+    if ind_important_pars is None:
+        # Find the indices of the important parameters in the numpy vector 
+        parnames = list(mm.give_vec_for(mm.transf_print, justnames=True))
+        max_imp = np.min([5, len(parnames)])
+        if (len(important_pars) < max_imp):
+            print(f"\t(well...there were only {len(important_pars):d} ", end='')
+            print("given, so we'll randomly choose a few more)")
+            # if less than max_imp were given, add a few randomly to make max_imp
+            n = len(important_pars)
+            ind_important_pars = []
+            otherinds = list(range(len(parnames)))
+            for p in important_pars:
+                i = parnames.index(p)
+                ind_important_pars.append(i)
+                otherinds.remove(i)
+            inds = random.sample(otherinds, max_imp - n)
+            for i in range(max_imp-n):
+                ind_important_pars.append(inds[i])
+            ind_important_pars = np.array(ind_important_pars)
+            important_pars = \
+                mm.give_vec_for(mm.transf_print, justnames=True)[ind_important_pars]
+        else:
+            ind_important_pars = []
+            for p in important_pars:
+                ind_important_pars.append(parnames.index(p))
+            ind_important_pars = np.array(ind_important_pars)
+    if ind_discrete_pars is None:
+        # Find the indices of the discrete parameters in the numpy vector
+        parnames = list(mm.give_vec_for(mm.transf_print, justnames=True))
+        ind_discrete_pars = []
+        for p in discrete_pars:
+            pindiv = p + '['
+            pmean = p + '_mean'
+            for i in range(len(parnames)):
+                if ( (p == parnames[i]) | (pmean == parnames[i])
+                     | ( pindiv in parnames[i] ) ):
+                    ind_discrete_pars.append(parnames.index(parnames[i]))
+        ind_discrete_pars = np.array(ind_discrete_pars)
+    return ind_important_pars, ind_discrete_pars
 def print_list_w_commas(thelist):
     first=True
     for p in thelist:
@@ -312,9 +405,30 @@ def print_mixed_model_pars(indentstr="", dividerstr=""):
             print(3*indentstr + descrip_name[p] + ", " + p)
         print(indentstr + "with initial values for each individual:", end='')
         for index, row in indiv_nopop.iterrows():
-            print("\n" + 2*indentstr + index + ": ", end='')
+            print("\n" + 3*indentstr + index + ": ", end='')
             for c in indiv_nopop:
                 print(c + " = " + str(indiv_nopop.at[index, c]) + ", ", end='')
+            print("\n")
+        # prior values
+        for p in indiv_nopop:
+            print(3*indentstr + "prior dist: " + prior_dist[p] + " w/")
+            if (prior_dist[p] in ['normal', 'lognormal']):
+                print(4*indentstr + p + "(prior_mean, prior_stdev) = ", end='')
+                print(f"({prior_mean[p]:.3e}, {prior_stdev[p]:.3e})")
+            elif (prior_dist[p] == 'poisson'):
+                print(4*indentstr + p + "prior_mean = ", end='')
+                print(f"{prior_mean[p]:.3e}")
+            elif (prior_dist[p] == 'uniform'):
+                print(4*indentstr + p + "(prior_min, prior_max) = ", end='')
+                print(f"({prior_min[p]:.3e}, {prior_max[p]:.3e})")
+            # transformation maps
+            print(3*indentstr + "transformations:")
+            print(4*indentstr + p + "[mcmc-transformation]: ", end='')
+            print(transf_mcmc[p])
+            print(4*indentstr + p + "[print-transformation]: ", end='')
+            print(transf_print[p])
+            print(4*indentstr + p + "[plot-transformation]: ", end='')
+            print(transf_plot[p])
     # population parameters
     print("\n" + indentstr + "Parameters governing the population distributions:")
     if (len(indiv_pop) == 0):
@@ -333,10 +447,13 @@ def print_mixed_model_pars(indentstr="", dividerstr=""):
                 # prior values
                 print(4*indentstr + p + s + " prior distribution: " + prior_dist[p+s])
                 if (prior_dist[p+s] in ['normal', 'lognormal']):
-                    print(4*indentstr + p + s + f"(prior_mean, prior_stdev) = ", end='')
+                    print(4*indentstr + p + s + "(prior_mean, prior_stdev) = ", end='')
                     print(f"({prior_mean[p+s]:.3e}, {prior_stdev[p+s]:.3e})")
+                elif (prior_dist[p+s] == 'poisson'):
+                    print(4*indentstr + p + s + "prior_mean = ", end='')
+                    print(f"{prior_mean[p+s]:.3e}")
                 elif (prior_dist[p+s] == 'uniform'):
-                    print(4*indentstr + p + s + f"(prior_min, prior_max) = ", end='')
+                    print(4*indentstr + p + s + "(prior_min, prior_max) = ", end='')
                     print(f"({prior_min[p+s]:.3e}, {prior_max[p+s]:.3e})")
             print(3*indentstr + "transformations of parameters:")
             for s in ['_mean', '_stdev']:                
@@ -359,6 +476,9 @@ def print_mixed_model_pars(indentstr="", dividerstr=""):
         if (prior_dist[p] in ['normal', 'lognormal']):
             print(4*indentstr + p + "(prior_mean, prior_stdev) = ", end='')
             print(f"({prior_mean[p]:.3e}, {prior_stdev[p]:.3e})")
+        elif (prior_dist[p] == 'poisson'):
+            print(4*indentstr + p + "prior_mean = ", end='')
+            print(f"{prior_mean[p]:.3e}")
         elif (prior_dist[p] == 'uniform'):
             print(4*indentstr + p + "(prior_min, prior_max) = ", end='')
             print(f"({prior_min[p]:.3e}, {prior_max[p]:.3e})")
@@ -371,14 +491,19 @@ def print_mixed_model_pars(indentstr="", dividerstr=""):
         print(4*indentstr + p + "[plot-transformation]: ", end='')
         print(transf_plot[p])
     # summary of parameters
-    num_mcmc_pars = Nindiv*(len(list_indiv_pop_pars) + len(list_indiv_nopop_pars)) + len(pop) + len(other)
+    num_nan_pop = int(indiv_pop.isna().sum().sum())
+    num_nan_nopop = int(indiv_nopop.isna().sum().sum())
+    num_mcmc_pars = Nindiv*(len(list_indiv_pop_pars) + len(list_indiv_nopop_pars)) + len(pop) \
+        + len(other) - num_nan_pop - num_nan_nopop
     print(indentstr + f"In summary, there are {num_mcmc_pars:d} parameters for MCMC evolution:")
     print(2*indentstr + f"{Nindiv*len(list_indiv_pop_pars):d} indiv_pop parameters: (", end='')
     print_list_w_commas(list_indiv_pop_pars)
     print(") * " + f"{Nindiv:d} individuals")
+    print(3*indentstr + f"[minus {num_nan_pop:d} parameters not set (\"nan\") for some individuals]")
     print(2*indentstr + f"{Nindiv*len(list_indiv_nopop_pars):d} indiv_nopop parameters: (", end='')
     print_list_w_commas(list_indiv_nopop_pars)
     print(") * " + f"{Nindiv:d} individuals")
+    print(3*indentstr + f"[minus {num_nan_nopop:d} parameters not set (\"nan\") for some individuals]")    
     print(2*indentstr + f"{len(indiv_pop.columns)*2:d} pop parameters: (", end='')
     print_list_w_commas(list_indiv_pop_pars)
     print(") * " + "2 distribution pars")
@@ -428,14 +553,24 @@ def get_val_w(transf_func, parname, val, reverse=False):
             return val
         elif (transf_func[parname] == 'log'):
             return np.exp(val)
+        elif (transf_func[parname] == 'tan'):
+            ymin = prior_min[parname]
+            ymax = prior_max[parname]
+            return (ymax-ymin) *( ( np.arctan(val) + np.pi/2 )/ np.pi ) + ymin
         else:
-            print("***Error: transform " + transf_func[parname] + " not found")                
+            print("***Error: reverse transform " + transf_func[parname] + " not found")                
             exit(0)
     else:
         if (transf_func[parname] == 'none'):
             return val
         elif (transf_func[parname] == 'log'):
             return np.log(val)
+        elif (transf_func[parname] == 'tan'):
+            ymin = prior_min[parname]
+            ymax = prior_max[parname]
+            return np.tan( (val - ymin) * np.pi/(ymax-ymin) - np.pi/2 )
+        elif (transf_func[parname] == 'round'):
+            return np.round(val)
         else:
             print("***Error: transform " + transf_func[parname] + " not found")                
             exit(0)
@@ -452,6 +587,10 @@ def get_name_w(transf_func, parname, i=None):
         return pn
     elif (transf_func[parname] == 'log'):
         return "log(" + pn + ")"
+    elif (transf_func[parname] == 'tan'):
+        return "tan(... " + pn + " ...)"
+    elif (transf_func[parname] == 'round'):
+        return pn
     else:
         print("***Error: transform " + transf_func[parname] + " not found")
     exit(0)
@@ -472,14 +611,18 @@ def give_vec_for(transf_func, justnames=False):
         arr = []
         for p in list_indiv_pop_pars:
             for i in indiv_pop.index:
-                arr = np.concatenate(
-                    (arr, [ get_name_w(transf_func, p + "_mean", i=i) ])
-                )
+                # only send the non-NaN values into arr
+                if ~np.isnan(indiv_pop.at[i,p]):
+                    arr = np.concatenate(
+                        (arr, [ get_name_w(transf_func, p + "_mean", i=i) ])
+                    )
         for p in list_indiv_nopop_pars:
             for i in indiv_nopop.index:
-                arr = np.concatenate(
-                    (arr, [ get_name_w(transf_func, p, i=i) ])
-                )
+                # only send the non-NaN values into arr                
+                if ~np.isnan(indiv_nopop.at[i,p]):                
+                    arr = np.concatenate(
+                        (arr, [ get_name_w(transf_func, p, i=i) ])
+                    )
         for p in list_indiv_pop_pars:
             arr = np.concatenate( (arr, [get_name_w(transf_func, p + "_mean")]) )
             arr = np.concatenate( (arr, [get_name_w(transf_func, p + "_stdev")]) )
@@ -506,13 +649,19 @@ def give_vec_for(transf_func, justnames=False):
     ind = 0
     # INDIV_POP:  for each par, append *vectors* over individuals
     for p in list_indiv_pop_pars:
+        # only send non-NaNs into arr
+        vec = indiv_pop[p].to_numpy()
+        vec = vec[~np.isnan(vec)]
         arr = np.concatenate(
-            (arr, get_val_w(transf_func, p + '_mean', indiv_pop[p].to_numpy() ) )
+            (arr, get_val_w(transf_func, p + '_mean', vec ) )
         )
     # INDIV_NOPOP:  for each par, append *vectors* over individuals            
     for p in list_indiv_nopop_pars:
+        # only send non-NaNs into arr        
+        vec = indiv_nopop[p].to_numpy()
+        vec = vec[~np.isnan(vec)]
         arr = np.concatenate(
-            (arr, get_val_w(transf_func, p, indiv_nopop[p].to_numpy() ) )
+            (arr, get_val_w(transf_func, p, vec ) )
         )
     # POP: for each par, append par_mean then par_stdev
     for p in list_indiv_pop_pars:
@@ -533,44 +682,96 @@ def take_vec_from_mcmc(arr):
     will need to be adjusted to catch those parameters and
     handle them separately. (see give_vec_for_mcmc())
     """
-    # For INDIV_* transfer full columns from the vector to df
-    N_ipp = len(list_indiv_pop_pars)
-    for (p, n) in zip(list_indiv_pop_pars, range(N_ipp)):
-        indiv_pop[p] = get_val_w(transf_mcmc, p + '_mean',
-                                 arr[n*Nindiv:(n+1)*Nindiv], reverse=True)
-    N_inpp = len(list_indiv_nopop_pars)
-    for (p, n) in zip(list_indiv_nopop_pars, range(N_inpp)):
-        indiv_nopop[p] = get_val_w(transf_mcmc, p,
-                                   arr[(N_ipp+n)*Nindiv:(N_ipp+n+1)*Nindiv],
-                                   reverse=True)
-    # For POP and OTHER, transfer element by element from vec to dictionary
-    count = Nindiv * (N_ipp + N_inpp)
-    for p in pop:
-        pop[p] = get_val_w(transf_mcmc, p, arr[count], reverse=True)
-        count += 1
-    for p in other:
-        other[p] = get_val_w(transf_mcmc, p, arr[count], reverse=True)
-        count += 1
+    #
+    #=== For INDIV_* transfer full columns from the vector to df
+    #
 
-def log_like_and_prior(theta):
-    """
-    Public method called by mcmc_mixed-effects to return both 
-    the likelihood and the prior for a given parameter vector
-    """
-    # put the parameters into their dictionaries
-    take_vec_from_mcmc(theta)
-    # set the parameters for the data module
-    dat.set_pars(indiv_pop, indiv_nopop, other)
-    # get the log-likelihood from the data module
-    ll = dat.get_log_likelihood()
-    # get the log-prior
-    lp = get_log_prior()
-    # return to mcmc_mixed-effects
-    return ll, lp
+    #
+    arrind = 0
+    for p in list_indiv_pop_pars:
+        #
+        # First check for any NaNs in the dataframe
+        #  (these positions with NaNs should persist... see below)
+        #
+        vec = indiv_pop[p].to_numpy()
+        if np.any(np.isnan(vec)):
+            # if there are NaNs (individuals that don't use that par)
+            # then get the positions of the non-NaN for placement
+            okpos = ~np.isnan(vec)
+            okvals = okpos.sum()
+            newarr = np.zeros(len(indiv_pop))
+            newarr[okpos] = arr[arrind:(arrind+okvals)]
+            # and keep the other positions NaN-valued
+            newarr[~okpos] = np.nan
+            # then put NaN-expanded array into dataframe
+            indiv_pop[p] = get_val_w(transf_mcmc, p + '_mean', newarr, reverse=True)
+            arrind += okvals
+        else:
+            # if no NaNs, just put that Nindiv segment of arr into dataframe
+            indiv_pop[p] = get_val_w(transf_mcmc, p + '_mean',
+                                     arr[arrind:(arrind+Nindiv)], reverse=True)
+            arrind += Nindiv
+    for p in list_indiv_nopop_pars:
+        # first check for any NaNs in the dataframe
+        vec = indiv_nopop[p].to_numpy()
+        if np.any(np.isnan(vec)):
+            # if there are NaNs (individuals that don't use that par)
+            # then get the positions of the non-NaN for placement
+            okpos = ~np.isnan(vec)
+            okvals = okpos.sum()
+            newarr = np.zeros(len(indiv_nopop))
+            newarr[okpos] = arr[arrind:(arrind+okvals)]
+            # and keep the other positions NaN-valued
+            newarr[~okpos] = np.nan
+            # then put NaN-expanded array into dataframe
+            indiv_nopop[p] = get_val_w(transf_mcmc, p, newarr, reverse=True)
+            arrind += okvals
+        else:
+            # if no NaNs, just put that Nindiv segment of arr into dataframe
+            indiv_nopop[p] = get_val_w(transf_mcmc, p,
+                                     arr[arrind:(arrind+Nindiv)], reverse=True)
+            arrind += Nindiv
+    # For POP and OTHER, transfer element by element from vec to dictionary
+    for p in pop:
+        pop[p] = get_val_w(transf_mcmc, p, arr[arrind], reverse=True)
+        arrind += 1
+    for p in other:
+        other[p] = get_val_w(transf_mcmc, p, arr[arrind], reverse=True)
+        arrind += 1
 
 def get_normal_logprior(pr_mean, pr_var, val):
     return -0.5 * np.sum( (val - pr_mean)**2 / pr_var + np.log(2*np.pi*pr_var) )
 
+def get_poisson_logprior(pr_mean, val):
+    if (pr_mean > 1000):
+        # for large values, just use normal
+        return get_normal_logprior(pr_mean, pr_mean, val)
+    if hasattr(val, "__len__"):
+        retval = 0.0
+        v = np.round(val).astype(int)
+        #
+        # Negative values have zero probability
+        #
+        if np.any(np.array(val) < 0):
+            return -np.inf
+        #
+        # Otherwise, poisson:
+        #
+        #     f(i) = e^(-lambda) * lambda^i / i!
+        #
+        #     -> log(f) = - lambda + i * log(lambda) - log(i!)
+        #
+        # where
+        #
+        #     i! = gamma(i + 1)
+        #
+        return np.sum( v * np.log(pr_mean) - pr_mean - spsp.gammaln(v + 1) )
+    else:
+        if val < 0:
+            return -np.inf
+        return ( -pr_mean + np.round(val)*np.log(pr_mean)
+                 - spsp.gammaln(np.round(val) + 1) )
+    
 def get_uniform_logprior(pr_min, pr_max, val):
     if ( np.all(val > pr_min) & np.all(val < pr_max) ):
         return 0.0
@@ -581,25 +782,28 @@ def get_log_prior():
     log_prior = 0.0
     # get conditional prior values of INDIV_POP pars wrt population dist
     for p in list_indiv_pop_pars:
+        # get the non-NaN values only
+        vec = indiv_pop[p].to_numpy()
+        vec = vec[~np.isnan(vec)]
         if (pop_dist[p] == 'normal'):
-            log_prior += get_normal_logprior(pop[p+'_mean'], pop[p+'_stdev']**2,
-                                             indiv_pop[p].to_numpy())
+            log_prior += get_normal_logprior(pop[p+'_mean'], pop[p+'_stdev']**2, vec)
         elif (pop_dist[p] == 'lognormal'):
             log_prior += get_normal_logprior(np.log(pop[p+'_mean']),
-                                             pop[p+'_stdev']**2,
-                                             np.log(indiv_pop[p].to_numpy()) )
+                                             pop[p+'_stdev']**2, np.log(vec))
     # get prior values of INDIV_NOPOP pars
     for p in list_indiv_nopop_pars:
+        # get the non-NaN values only
+        vec = indiv_nopop[p].to_numpy()
+        vec = vec[~np.isnan(vec)]
         if (prior_dist[p] == 'normal'):
-            log_prior += get_normal_logprior(prior_mean[p], prior_stdev[p]**2,
-                                indiv_nopop[p].to_numpy())
+            log_prior += get_normal_logprior(prior_mean[p], prior_stdev[p]**2, vec)
         elif (prior_dist[p] == 'lognormal'):
             log_prior += get_normal_logprior(np.log(prior_mean[p]),
-                                             prior_stdev[p]**2,
-                                             np.log(indiv_nopop[p].to_numpy()))
+                                             prior_stdev[p]**2, np.log(vec))
+        elif (prior_dist[p] == 'poisson'):
+            log_prior += get_poisson_logprior(prior_mean[p], vec)
         elif ( prior_dist[p] == 'uniform'):
-            log_prior += get_uniform_logprior(prior_min[p], prior_max[p],
-                                              indiv_nopop[p].to_numpy())
+            log_prior += get_uniform_logprior(prior_min[p], prior_max[p], vec)
     # get prior values of POP parameters
     for p in list_indiv_pop_pars:
         for s in ['_mean', '_stdev']:
@@ -610,6 +814,8 @@ def get_log_prior():
                 log_prior += get_normal_logprior(np.log(prior_mean[p+s]),
                                                  prior_stdev[p+s]**2,
                                                  np.log(pop[p+s]))
+            elif (prior_dist[p+s] == 'poisson'):
+                log_prior += get_poisson_logprior(prior_mean[p+s], pop[p+s])
             elif (prior_dist[p+s] == 'uniform'):
                 log_prior += get_uniform_logprior(prior_min[p+s],
                                                    prior_max[p+s], pop[p+s])
@@ -622,6 +828,8 @@ def get_log_prior():
             log_prior += get_normal_logprior(np.log(prior_mean[p]),
                                              prior_stdev[p]**2,
                                              np.log(other[p]))
+        elif (prior_dist[p] == 'poisson'):
+            log_prior += get_poisson_logprior(prior_mean[p], other[p])
         elif (prior_dist[p] == 'uniform'):
             log_prior += get_uniform_logprior(prior_min[p], prior_max[p], other[p])
     return log_prior
@@ -763,10 +971,6 @@ def log_posterior_probability(theta):
     """
     # evaluate likelihood and prior
     ll, lp = mod_log_like_and_prior(theta)
-    # if theta not in prior, return posterior probability of zero
-    if not np.isfinite(lp):
-        return -np.inf
-    # otherwise return the (log of the) product of prior and likelihood
     # update (2022-05-26): add "blobs" for likelihood and prior individually
     return lp + ll, ll, lp
 
@@ -785,8 +989,16 @@ def get_mcmc_N_steps(restart):
     
 def get_init_pos(pars_map):
     n_dim = len(pars_map)
+    # tight bundle about max a posteriori
     pos = ( pars_map + np.abs(pars_map)*mcmc_initial_bundle_fractional_width
             * np.random.randn(mcmc_N_walkers, n_dim))
+    # except for discrete parameters which get uniform spread over prior
+    for i in range(len(ind_discrete_pars)):
+        # if par name is for individual it will be saved as par[indivname]
+        short_name = discrete_par_names[i].split('[')[0]
+        pos[:,ind_discrete_pars[i]] = np.random.uniform(low=prior_min[short_name],
+                                                        high=prior_max[short_name],
+                                                        size=mcmc_N_walkers)
     return pos, n_dim
 
 def print_mcmc_convergence_step(Nsteps, tau_max, tau_frac_max):
@@ -862,14 +1074,14 @@ def plot_and_save_chains(sampler, tau_max):
     if (N_imp_pars > 1):
         for i in range(N_imp_pars):
             ax = axes[i]
-            ind = ind_imp_pars[i]
+            ind = ind_important_pars[i]
             ax.plot(samples[:, :, ind], "k", alpha=0.3)
             ax.set_xlim(0, len(samples))
             ax.set_ylabel(imp_par_names_mcmc[i])
             ax.yaxis.set_label_coords(-0.1, 0.5)
         axes[-1].set_xlabel(f"step number (of last {Npoints:d})")
     else:
-        ind = ind_imp_pars[0]        
+        ind = ind_important_pars[0]        
         axes.plot(samples[:, :, ind], "k", alpha=0.3)
         axes.set_xlim(0, len(samples))
         axes.set_ylabel(imp_par_names_mcmc[0])
@@ -902,14 +1114,14 @@ def plot_and_save_samples(sampler, tau_max):
     if (N_imp_pars > 1):
         for i in range(N_imp_pars):
             ax = axes[i]
-            ind = ind_imp_pars[i]
+            ind = ind_important_pars[i]
             ax.plot(flat_samples[-1*Npoints:,ind], "k", alpha=0.3)
             ax.set_xlim(0, Npoints)
             ax.set_ylabel(imp_par_names_mcmc[i])
             ax.yaxis.set_label_coords(-0.1, 0.5)
         axes[-1].set_xlabel(f"steps / thin (last {Npoints:d} samples)")
     else:
-        ind = ind_imp_pars[0]
+        ind = ind_important_pars[0]
         axes.plot(flat_samples[-1*Npoints:,ind], "k", alpha=0.3)
         axes.set_xlim(0, Npoints)
         axes.set_ylabel(imp_par_names_mcmc[0])
@@ -925,19 +1137,25 @@ def plot_and_save_samples(sampler, tau_max):
         
 def plot_and_save_marginal_likelihood(n_steps, lml_hm, lml_gd):
     # Plot log(marg_like) vs steps
-    maxval = np.concatenate((lml_hm, lml_gd)).max()
-    minval = np.concatenate((lml_hm, lml_gd)).min()           
     plt.close('all')
-    figml, axml = plt.subplots(figsize=(10,8))    
-    axml.plot(n_steps, lml_hm, '-ro')
-    axml.plot(n_steps, lml_gd, '-bo')
+    figml, axml = plt.subplots(figsize=(10,8))
+    if ml_plot_only_GD:
+        axml.plot(n_steps, lml_gd, '-bo')
+        axml.set_ylabel("logML_gd (b)")
+        maxval = np.max(lml_gd)
+        minval = np.max(lml_gd)
+    else:
+        axml.plot(n_steps, lml_hm, '-ro')
+        axml.plot(n_steps, lml_gd, '-bo')
+        axml.set_ylabel("logML_hm (r), logML_gd (b)")
+        maxval = np.concatenate((lml_hm, lml_gd)).max()
+        minval = np.concatenate((lml_hm, lml_gd)).min()           
     axml.set_xlim(0, n_steps[-1])
     axml.set_ylim(minval - 0.1 * (maxval - minval), maxval + 0.1 * (maxval - minval))
     axml.yaxis.get_ticklocs(minor=True)
     axml.minorticks_on()
     axml.grid(True, which='both')
     axml.set_xlabel("number of steps")
-    axml.set_ylabel("logML_hm (r), logML_gd (b)")
     # save figure file
     #print("  Saving marginal likelihood figure to:\n\t" + marglike_fig_file)
     print("  Saved marginal likelihood figure.")
@@ -982,28 +1200,33 @@ def sample_to_convergence(sampler, init_pos, restart=False):
         if Nsteps % mcmc_run_to_convergence_check_steps:
             margsteps = mcmc_run_to_convergence_check_steps \
                 / mcmc_run_to_convergence_marg_like_checks_per_conv
-            if ( ( (Nsteps % margsteps) == 0 )
-                 & mcmc_run_to_convergence_get_marginal_likelihood
-                 & first_tau_checked ):
-                #--- 10 times every convergence check: do marginal likelihood check
-                burnin, thin = get_burn_thin(np.max(old_taus))
-                if (Nsteps > 2*burnin):
-                    flat_samples = sampler.get_chain(discard=burnin,
-                                                     thin=thin, flat=True)
-                    flat_blobs = sampler.get_blobs(discard=burnin,
-                                                   thin=thin, flat=True)
-                    flat_loglike = flat_blobs["log_like"]
-                    flat_logprior = flat_blobs["log_prior"]
-                    # calculate and print ML to user
-                    print(f"  ({Nsteps:d})", end="")
-                    hm, gd = conv_check_get_marginal_likelihood(flat_samples,
-                                                                flat_loglike,
-                                                                flat_logprior)
-                    log_marg_like_hm.append(hm)
-                    log_marg_like_gd.append(gd)
-                    n_steps_ml.append(Nsteps)
-                    # plot marginal likelihood vs steps; save plot and data
-                    plot_and_save_marginal_likelihood(n_steps_ml, log_marg_like_hm, log_marg_like_gd)
+            if ( (Nsteps % margsteps) == 0 ):
+                
+                if ( mcmc_run_to_convergence_get_marginal_likelihood
+                     & first_tau_checked ):
+                    #--- 10 times every convergence check: do marginal likelihood check
+                    burnin, thin = get_burn_thin(np.max(old_taus))
+                    if (Nsteps > 2*burnin):
+                        flat_samples = sampler.get_chain(discard=burnin,
+                                                         thin=thin, flat=True)
+                        flat_blobs = sampler.get_blobs(discard=burnin,
+                                                       thin=thin, flat=True)
+                        flat_loglike = flat_blobs["log_like"]
+                        flat_logprior = flat_blobs["log_prior"]
+                        # calculate and print ML to user
+                        print(f"  ({Nsteps:d})", end="")
+                        hm, gd = conv_check_get_marginal_likelihood(flat_samples,
+                                                                    flat_loglike,
+                                                                    flat_logprior)
+                        log_marg_like_hm.append(hm)
+                        log_marg_like_gd.append(gd)
+                        n_steps_ml.append(Nsteps)
+                        # plot marginal likelihood vs steps; save plot and data
+                        plot_and_save_marginal_likelihood(n_steps_ml, log_marg_like_hm, log_marg_like_gd)
+                elif mcmc_run_to_convergence_verbose:
+                    # print out the acceptance frac and step prior to first marg like
+                    af = sampler.acceptance_fraction
+                    print(f"  ({Nsteps:d}) Current average acceptance fraction = {np.mean(af):.3f}")                    
             # Don't check convergence until "check_steps" is reached
             continue
         # print a newline for the steps printout
@@ -1029,6 +1252,9 @@ def sample_to_convergence(sampler, init_pos, restart=False):
         if mcmc_run_to_convergence_verbose:
             # print info to user about convergence
             print_mcmc_convergence_step(Nsteps, tau_max, tau_frac_max)
+            # and print out the acceptance fraction
+            af = sampler.acceptance_fraction
+            print(f"  Current average acceptance fraction = {np.mean(af):.3f}")
         if mcmc_run_to_convergence_plot_autocorr:
             # make a plot of the autocorrelation values vs steps
             plot_and_save_autocorrelation(index, autocorr_min, autocorr_max,
@@ -1064,20 +1290,23 @@ def sample_to_convergence(sampler, init_pos, restart=False):
         if converged:
             break
 
-def do_sampling(init_pos, n_dim, backend = None, pool = None, restart=False):
+def do_sampling(init_pos, n_dim, moves=None, backend = None, pool = None, restart=False):
     print("Creating EnsembleSampler...")
     # blobs for log_likelihood and log_prior in the log_posterior_prob return
     dtype = [("log_like", float), ("log_prior", float)]
     # define the sampler
     sampler = emcee.EnsembleSampler(
         mcmc_N_walkers, n_dim, log_posterior_probability,
-        pool=pool, backend=backend, blobs_dtype=dtype
+        moves=moves,
+        pool=pool,
+        backend=backend,
+        blobs_dtype=dtype
     )
     # checking convergence on the fly or just running for max steps
     if mcmc_run_to_convergence:
         print("Running sampler to convergence ", end='')
         print(f"(N_autocorr = {mcmc_run_to_convergence_N_autocorrs:d}; ", end='')
-        print(f"Delta_autocorr_frac = {mcmc_run_to_convergence_delta_tau_frac:.3f}")
+        print(f"Delta_autocorr_frac = {mcmc_run_to_convergence_delta_tau_frac:.3f})")
         print(f"with max steps {mcmc_N_steps_max:d}, ", end='')
         print(f"checking convergence every {mcmc_run_to_convergence_check_steps:d} ...\n")
         sample_to_convergence(sampler, init_pos, restart=restart)
@@ -1088,8 +1317,9 @@ def do_sampling(init_pos, n_dim, backend = None, pool = None, restart=False):
                          skip_initial_state_check = mcmc_skip_initial_state_check)
     return sampler
 
-def run_mcmc_sampler(pars_map, backend, restart=False):
+def run_mcmc_sampler(pars_map, moves, backend, restart=False):
     # Initialize walkers in small bundle about MAP position
+    #   (for discrete-valued pars, will give uniform distribution)
     initial_pos, n_dim = get_init_pos(pars_map)
     # but no need for initial position if a restarted chain
     if restart:
@@ -1103,12 +1333,13 @@ def run_mcmc_sampler(pars_map, backend, restart=False):
                 print(f"--> With multiprocessing: Using all of the {ncpu:d} CPUs")
             else:
                 print(f"--> With multiprocessing: Using {mcmc_ncpus_to_use:d} of {ncpu:d} CPUs")
-            sampler = do_sampling(initial_pos, n_dim,
+            sampler = do_sampling(initial_pos, n_dim, moves=moves,
                                   backend = backend, pool = pool, restart=restart)
     else:
         # no pool
         print(f"--> Single-thread processing")
-        sampler = do_sampling(initial_pos, n_dim, backend = backend, restart=restart)
+        sampler = do_sampling(initial_pos, n_dim, moves = moves,
+                              backend = backend, restart=restart)
     return sampler, n_dim
 
 def calc_marg_like(flat_samples, flat_loglike, flat_logprior,
@@ -1216,18 +1447,18 @@ def get_top_posterior_values_and_compare(flat_logprob, flat_samples, pars_MAP):
     print("The top 10 largest posterior values among the samples are:")
     for i in range(10):
         print(f"{MAPs[i]:.5e} with random-effect parameters:\n\t", end='')
-        print(flat_samples[maxinds[i],ind_imp_pars])
+        print(flat_samples[maxinds[i],ind_important_pars])
     tree = spspat.KDTree(flat_samples)
     dist, parind = tree.query(pars_MAP)
     print(f"The closest sample to the maximum likelihood theta has:")
-    print(flat_samples[parind,ind_imp_pars])
+    print(flat_samples[parind,ind_important_pars])
     print(f"With log(posterior) = {flat_logprob[parind]:.5e}")
 
 def get_corner_plots(flat_samples_transformed_plot, pars_MAP_transformed):
-    flat_samples_re = flat_samples_transformed_plot[:,ind_imp_pars]
+    flat_samples_re = flat_samples_transformed_plot[:,ind_important_pars]
     if cornerplot_plot_maxvals:
         figCI = corner.corner(flat_samples_re, labels=imp_par_names_plot,
-                              truths=pars_MAP_transformed[ind_imp_pars])
+                              truths=pars_MAP_transformed[ind_important_pars])
         if cornerplot_make_allplot:
             figCA = corner.corner(flat_samples_transformed_plot,
                                   labels=par_names_plot,
@@ -1254,8 +1485,8 @@ def get_bestfit_mvn(flat_samples):
     return mvn, mvn_samples
 
 def overplot_mvn_on_cornerplots(figCI, figCA, mvn_samples_transformed, ndim):
-    if (len(ind_imp_pars) == 1):
-        iip = np.concatenate( (ind_imp_pars, [ind_imp_pars[0]-1]) )
+    if (len(ind_important_pars) == 1):
+        iip = np.concatenate( (ind_important_pars, [ind_important_pars[0]-1]) )
         corner.corner(mvn_samples_transformed[:,iip],
                       fig=figCI, color='red',
                       plot_datapoints=False, plot_density=False,
@@ -1267,7 +1498,7 @@ def overplot_mvn_on_cornerplots(figCI, figCA, mvn_samples_transformed, ndim):
             ymin, ymax = ax.get_ylim()
             ax.set_ylim(ymin, ymax/ml_fac_to_make_smooth)
     else:
-        corner.corner(mvn_samples_transformed[:,ind_imp_pars],
+        corner.corner(mvn_samples_transformed[:,ind_important_pars],
                       fig=figCI, color='red',
                       plot_datapoints=False, plot_density=False,
                       hist_kwargs = {'alpha' : 0.0})

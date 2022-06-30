@@ -44,12 +44,24 @@ other = None         # dictionary
 #
 # Set the list of data-sets produced by each evolvemodel
 #
+#    For hivtcell, as is seen below, data sets are
+#    named:
+#
+#       df['data_set'] =
+#            df['exp_type'] + '_' + df['y_data_type']
+#
+#    using the information provided in raw data file.
+#
 #-------------------------------------------------------
 data_sets = {
     'virus-decay-moi' : ['virus_decay_count_inf',
                          ],
-    'uninfected-timeseries': ['uninf_count_tot',
-                              'uninf_count_dead'],
+    'uninfected-timeseries': ['timeseries_uninf_count_tot',
+                              'timeseries_uninf_count_dead'],
+    'infected-timeseries': ['timeseries_inf_count_tot',
+                            'timeseries_inf_count_dead',
+                            'timeseries_inf_count_inf',
+                            'timeseries_inf_count_inf_and_dead'],                            
 }
 #-------------------------------------------------------
 #
@@ -58,8 +70,12 @@ data_sets = {
 #-------------------------------------------------------
 evolve_model = {
     'virus_decay_count_inf' : 'virus-decay-moi',
-    'uninf_count_tot' : 'uninfected-timeseries',
-    'uninf_count_dead' : 'uninfected-timeseries',
+    'timeseries_uninf_count_tot' : 'uninfected-timeseries',
+    'timeseries_uninf_count_dead' : 'uninfected-timeseries',
+    'timeseries_inf_count_tot' : 'infected-timeseries',
+    'timeseries_inf_count_dead' : 'infected-timeseries',
+    'timeseries_inf_count_inf' : 'infected-timeseries',
+    'timeseries_inf_count_inf_and_dead' : 'infected-timeseries',
 }
 # 
 #--- The data for each individual
@@ -170,41 +186,68 @@ def prep_data():
     #
     # Perform any necessary clean-up/pre-analysis of the data
     #
-    #-------------------------------------------------------    
+    #-------------------------------------------------------
     #
-    #--- Remove rows of infected cell data for uninfected trials
+    #--- ALL-TIMESERIES: Add the initial number of cells prepared
+    #
+    #    For each cell-type and each trial, add an initial point
+    #    (t=-24h for rest ecm, and ecp; t=0h for act) with 
+    #    count_tot equal to 300,000 cells, as were prepared by
+    #    manual counting.
+    #
+    newrows = []
+    for index, row in df.iterrows():
+        if ( (row['exp_type'] in ['timeseries_uninf', 'timeseries_inf'])
+             & (int(row['X']) == 2)
+             & (row['y_data_type'] == 'count_tot') ):
+            r = df.iloc[index].copy()
+            if (row['cell_type'] == 'act'):
+                r['X'] = 0
+            else:
+                r['X'] = -1
+            r['rep1'] = 300000
+            r['rep2'] = np.nan
+            r['rep3'] = np.nan
+            newrows.append(r.copy())
+    df = df.append(pd.DataFrame(newrows), ignore_index=True)
+    #
+    #--- UNINF-TIMESERIES: Remove rows of infected
     #
     df = df[ ~( (df['exp_type'] == 'timeseries_uninf')
                & ( (df['y_data_type'] == 'frac_inf')
                    | (df['y_data_type'] == 'dead_frac_of_inf') ) )]
     #
-    #--- Get total number of cells infected for the virus decay experiments
+    #--- INF-TIMESERIES (REST 1-2-3, ECM 1): Set dead_frac_of_inf to
+    #    zero at 2d time (fracinf here is 0 or very close, so any
+    #    nonzero values for dfi are erroneous)
     #
-    vdf = df[ (df['exp_type'] == 'virus_decay')
-              & (df['y_data_type'] == 'count_tot')].copy()
-    vdf.reset_index(drop=True, inplace=True)
-    #
-    #--- Loop through the frac_inf data, and multiply
-    #    onto the associated count_tot data
-    #
-    repstrings = ['rep1', 'rep2', 'rep3', 'rep4', 'rep5', 'rep6', 'rep7', 'rep8']
-    curindex = 0
+    df['exp_trial'] = df['exp_trial'].astype(str)
     for index, row in df.iterrows():
-        if ( (row.exp_type == 'virus_decay')
-             & (row.y_data_type == 'frac_inf') ):
-            for rep in repstrings:
-                if not pd.isnull(row[rep]):
-                    vdf.at[curindex, rep] = row[rep] * vdf.at[curindex, rep]
-                    # Set any zero-valued points to Nan (will be fitting log(val))
-                    if (vdf.at[curindex, rep] == 0):
-                        vdf.loc[curindex, rep] = np.nan
-            curindex +=1
-    vdf['y_data_type'] = 'count_inf'
+        if ( (row.y_data_type == 'dead_frac_of_inf')
+             & ( (row.cell_type == 'rest')
+                 | ( (row.cell_type == 'ecm')
+                     & (row.exp_trial == '1') ) ) ):
+            for r in ['rep1', 'rep2', 'rep3']:
+                df.at[index, r] = 0.0
     #
-    #--- Append the virus_decay-count_inf data to the full dataframe
-    #   (this is not independent, but is what we want to use for virus_decay)
-    df = df.append(vdf)
-    df.reset_index(inplace=True)
+    #--- INF-TIMESERIES: Use whole-cell counts instead of
+    #    fractions, so get new rows:
+    #
+    #       frac_inf + count_tot -> count_inf
+    #       dead_frac_of_inf + count_inf -> count_inf_and_dead
+    #
+    df = hivtcell_multiply_and_append_rows(df, 'timeseries_inf',
+                                           'count_tot', 'frac_inf',
+                                           'count_inf')
+    df = hivtcell_multiply_and_append_rows(df, 'timeseries_inf',
+                                           'count_inf', 'dead_frac_of_inf',
+                                           'count_inf_and_dead')    
+    #
+    #--- VIRUS-DECAY: Use whole cell counts for infected
+    #
+    df = hivtcell_multiply_and_append_rows(df, 'virus_decay',
+                                           'count_tot', 'frac_inf',
+                                           'count_inf')
     #-------------------------------------------------------
     #
     #        Identify and give names to each data set
@@ -229,9 +272,10 @@ def prep_data():
     df['Y'] = df['rep1']
     #
     # move the repN (N>1) into their own rows
+    repstrings = ['rep1', 'rep2', 'rep3', 'rep4', 'rep5', 'rep6', 'rep7', 'rep8']    
     newrows = []
     for index, row in df.iterrows():
-        r = df.iloc[index]
+        r = df.iloc[index].copy()
         for rep in repstrings[1:]:
             if not pd.isnull(row[rep]):
                 r['Y'] = r[rep]
@@ -240,31 +284,78 @@ def prep_data():
     df = df.append(pd.DataFrame(newrows), ignore_index=True)
     # delete any nan-valued points
     df = df[~( df['Y'].isna() )]
+    # output current dataframe to check
     df.to_csv("junk1.csv", index=False)
     #-------------------------------------------------------
     #
-    #     Select only the data sets for the DA-subproject
+    #        Perform any clean-up post-flattening
+    #
+    #-------------------------------------------------------
+    #
+    #--- Make all cell count data integer-valued
+    for index, row in df.iterrows():
+        if ('count' in row.y_data_type):
+            df.at[index, 'Y'] = np.round(row.Y)
+    #
+    #--- For virus_dilution, delete any rows with zero values
+    #    since we'll be doing log-normal likelihood
+    #
+    #        (I think this is just one data point:
+    #              ECP | trial-1 | 1.25uL
+    #         where only 10 cells were infected)
+    #
+    df = df[ ~( (df['exp_type'] == 'virus_dilution')
+                & (df['Y'] == 0) ) ]
+    #-------------------------------------------------------
+    #
+    #     Select only the data sets for this
+    #     data_analysis_subproject
     #
     #-------------------------------------------------------        
     #
-    #--- First check if only a single cell type should be
+    #--- SINGLE CELL TYPE?
+    #
+    #    First check if only a single cell type should be
     #    used and restrict to that data.  In that case the
     #    data_analysis_subproject would be of the form, e.g.,
     #
     #         rest_infected-timeseries
     #
-    dasp_celltype = data_analysis_subproject.split('_')[0]
+    dasp_celltype = data_analysis_subproject.split('-')[0]
     if (dasp_celltype in ['act', 'rest', 'ecp', 'ecm']):
         df = df[ (df['cell_type'] == dasp_celltype) ]
+        dasp = data_analysis_subproject.split('-', 1)[1]
     else:
         dasp_celltype = 'all'
+        dasp = data_analysis_subproject
     #
     #--- Then select data to be used for each data
     #    analysis subproject
     #
-    if (data_analysis_subproject == 'virus-decay'):
+    if (dasp == 'virus-decay'):
         # VIRUS DECAY: only using the number infected data
-        df = df[ (df['data_set'] == 'virus_decay_count_inf') ]
+        df = df[ df['data_set'] == 'virus_decay_count_inf' ]
+    elif (dasp == 'uninf-timeseries'):
+        # UNINFECTED TIMESERIES: 
+        df = df[ df['exp_type'] == 'timeseries_uninf' ]
+    elif (dasp == 'timeseries'):
+        # TIMESERIES: both infected and uninfected datasets
+        df = df[ (df['exp_type'] == 'timeseries_uninf')
+                 | (df['exp_type'] == 'timeseries_inf') ]
+    elif (dasp == 'timeseries_and_virus-dilution'):
+        # TIMESERIES AND VIRUS-DILUTION
+        df = df[ (df['exp_type'] == 'timeseries_uninf')
+                 | (df['exp_type'] == 'timeseries_inf')
+                 | (df['exp_type'] == 'timeseries_inf')
+                 | (df['exp_type'] == 'virus_dilution') ]
+    elif (dasp == 'timeseries_and_virus-dilution_and_drugstopping'):
+        # TIMESERIES AND VIRUS-DILUTION AND DRUGSTOPPING
+        df = df[ (df['exp_type'] == 'timeseries_uninf')
+                 | (df['exp_type'] == 'timeseries_inf')
+                 | (df['exp_type'] == 'timeseries_inf')
+                 | (df['exp_type'] == 'virus_dilution') 
+                 | (df['exp_type'] == 'drugstopping_efav')
+                 | (df['exp_type'] == 'drugstopping_ralt') ]
     else:
         # NONE RECOGNIZED
         print("***Error: Data Analysis Subproject" 
@@ -502,12 +593,42 @@ def plot_data(ppars):
     print("\n\nFigure saved to:")
     print("\t" + ppars['plot_file'])
 
+
+def hivtcell_multiply_and_append_rows(df, exp_type, ytype1, ytype2, ytypenew):
+    """
+    Method specific to hivtcell data
+    """
+    ddf = df[ (df['exp_type'] == exp_type)
+              & (df['y_data_type'] == ytype1)].copy()
+    ddf.reset_index(drop=True, inplace=True)
+    #
+    # Loop through the second ydata type and
+    # multiply onto the first ydata type
+    #
+    repstrings = ['rep1', 'rep2', 'rep3', 'rep4', 'rep5', 'rep6', 'rep7', 'rep8']
+    curindex = 0
+    for index, row in df.iterrows():
+        if ( (row.exp_type == exp_type)
+             & (row.y_data_type == ytype2) ):
+            for rep in repstrings:
+                if not pd.isnull(row[rep]):
+                    ddf.at[curindex, rep] = row[rep] * ddf.at[curindex, rep]
+                    # Set any zero-valued points to Nan (will be fitting log(val))
+                    if (ddf.at[curindex, rep] == 0):
+                        ddf.loc[curindex, rep] = np.nan
+            curindex +=1
+    ddf['y_data_type'] = ytypenew
+    #
+    # Append the new rows onto the full data frame
+    newdf = df.copy().append(ddf)
+    newdf.reset_index(drop=True, inplace=True)
+    return newdf
+
 #======================================================================#
 #                                                                      #
 #                No adjustments should be needed below                 #
 #                                                                      #
 #======================================================================#    
-
 def make_hidden_axis(fig, xlabel, ylabel):
     ax = fig.add_subplot(111, frameon=False)
     ax.grid(False)
@@ -743,9 +864,27 @@ def load_data(mhyp, da_subproj):
                 idx = [ dx[em][x] for x in xvals_for_indiv[i][em][d] ]
                 xindices_for_indiv[i][em][d] = np.array(idx)
     #
+    #--- Output data information to user
+    #
+    output_data_info()
+    #
     #--- Return info on individuals to the model-hyp module
     #
     return [Nindiv, indiv_names, yvals_for_indiv, yvals_type_for_indiv,
             evolve_models_for_indiv, evolve_models_xvals_for_indiv,
             datasets_for_indiv, xindices_for_indiv]
 
+def output_data_info():
+    print(65*"=")
+    print("Data set to be used:")
+    indentstr = "  "
+    for i in indiv_names:
+        print(65*"=")
+        print("Individual:", i)
+        for em in evolve_models_for_indiv[i]:
+            print(indentstr + "Evolve-model:", em)
+            print(2*indentstr + "X vals:", evolve_models_xvals_for_indiv[i][em])
+            for d in datasets_for_indiv[i][em]:
+                print(2*indentstr + "Dataset:", d)
+                print(3*indentstr + "X:", xvals_for_indiv[i][em][d])
+                print(3*indentstr + "Y:", yvals_for_indiv[i][em][d])

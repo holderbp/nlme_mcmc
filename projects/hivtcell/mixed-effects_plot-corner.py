@@ -22,8 +22,16 @@ import module_mixed_effects_model as mm
 #   the parameters in the sample are correctly identified.
 #                                                              
 #==============================================================
+#
+#--- virus decay
+#
 #import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
-import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
+#import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
+#
+#--- uninfected timeseries
+#
+#import module_hivtcell_modhyp_ecp_uninf_timeseries_IPOP_none_INOPOP_tauT_nT_tD_t2_COM_sigma as mod
+import module_hivtcell_modhyp_ecp_uninf_timeseries_IPOP_none_INOPOP_N_tauT_nT_tD_COM_sigma_CONST_s as mod
 #//////////////////////////////////////////////////////////////
 
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -71,6 +79,19 @@ mm.ml_fac_to_reduce_sigma = 2    # skinnier than posterior
 #==============================================================
 #//////////////////////////////////////////////////////////////
 
+def get_modhyp_from_filename(filename):
+    # file should be:
+    #
+    #  output/YYYY-mm-dd_HHMM_samples_project_subproject_the_mod-hyp.dat
+    #
+    list_parts = filename.split('_')
+    lp = np.array(list_parts)[5:]
+    modhyp = ""
+    for i in range(len(lp)):
+        modhyp += lp[i] + '_'
+    modhyp = modhyp.split('.')[0]
+    return modhyp
+
 #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 #==============================================================
 #                      File Handling
@@ -96,7 +117,7 @@ else:
 #
 #--- Check that the model hypothesis of the samples matches
 #    that of the imported mod-hyp module
-modhyp = file_sample.split('_')[-1].split('.')[0]
+modhyp = get_modhyp_from_filename(file_sample)
 print("\nModel Hypothesis [mod-hyp module] = " + mod.model_hyp)
 print("Model Hypothesis [samples]        = " + modhyp)
 if (modhyp != mod.model_hyp):
@@ -138,10 +159,10 @@ print(dividerstr)
 #
 mm.par_names_print = mod.get_pars('print', justnames=True)
 mm.par_names_plot = mod.get_pars('plot', justnames=True)
-mm.ind_imp_pars = mod.get_ind_imp_pars()
-mm.imp_par_names_print = mm.par_names_print[mm.ind_imp_pars]
-mm.imp_par_names_plot = mm.par_names_plot[mm.ind_imp_pars]
-mm.N_imp_pars = len(mm.ind_imp_pars)    
+mm.ind_important_pars, junk = mod.get_index_important_and_discrete_pars()
+mm.imp_par_names_print = mm.par_names_print[mm.ind_important_pars]
+mm.imp_par_names_plot = mm.par_names_plot[mm.ind_important_pars]
+mm.N_imp_pars = len(mm.ind_important_pars)    
 
 #
 #--- Find the maximum of the posterior function (or likelihood)
@@ -171,6 +192,7 @@ print(dividerstr)
 print("Loading the samples from file...")
 # load the samples and blobs
 flat_samples = np.loadtxt(file_sample)
+print(f"Found {len(flat_samples):d} samples")
 flat_samples_loglike = np.loadtxt(file_loglike)
 flat_samples_logprior = np.loadtxt(file_logprior)
 # transform the samples
