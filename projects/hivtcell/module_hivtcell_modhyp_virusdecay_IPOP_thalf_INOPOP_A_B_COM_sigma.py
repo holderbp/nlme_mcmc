@@ -1,5 +1,10 @@
 import numpy as np
 import pandas as pd
+import random
+import functools
+import scipy.special as spsp
+
+print = functools.partial(print, flush=True)
 
 #======================================================================#
 #                                                                      #
@@ -55,7 +60,6 @@ model_hyp = 'IPOP-thalf_INOPOP-A-B_COM-sigma'
 #=== Import the evolve-model module and initialize it
 #
 import module_hivtcell_evolvemodel as evo
-evo.initialize(mm.datasets_for_indiv, mm.yvals_type_for_indiv)
 #
 #=== Optionally override the below specified transformations for
 #    plotting of all variables, and make plots with the "print"
@@ -185,6 +189,27 @@ mm.transf_print['sigma'] = 'none'
 important_pars = ['thalf_mean', 'thalf_stdev', 'sigma']
 ind_important_pars = None  # to be set below
 
+#
+#--- CONSTANTS
+#
+par_constants = {}
+#
+#=== IMPORTANT (non-nuisance) PARAMETERS
+#
+important_pars = ['sigma']
+ind_important_pars = None  # to be set below
+#
+#=== DISCRETE PARAMETERS 
+#
+discrete_pars = ['nT']    # will seek out <parname>+'[' and <parname>+'_mean' as well
+ind_discrete_pars = None  # to be set below
+
+
+#
+#=== Initialize the evolution model
+#
+evo.initialize(mm.datasets_for_indiv, mm.yvals_type_for_indiv, par_constants)
+
 def get_log_likelihood():
     #
     #--- Give the evolve-model module the current parameters
@@ -297,20 +322,53 @@ def plot_data(ppars):
         #===================================================
         dat.plot_data(plot_pars)
 
-def get_ind_imp_pars():
+def get_index_important_and_discrete_pars():
     """
     Public method for getting the numpy vector indices of those
     parameters that are considered "important" (non-nuisance).
     """
-    global ind_important_pars
+    global ind_important_pars, important_pars, ind_discrete_pars
     if ind_important_pars is None:
         # Find the indices of the important parameters in the numpy vector 
+        parnames = list(mm.give_vec_for(mm.transf_print,
+                                        justnames=True, shortnames=True))
+        max_imp = np.min([5, len(parnames)])
+        if (len(important_pars) < max_imp):
+            print(f"\t(well...there were only {len(important_pars):d} ", end='')
+            print("given, so we'll randomly choose a few more)")
+            # if less than max_imp were given, add a few randomly to make max_imp
+            n = len(important_pars)
+            ind_important_pars = []
+            otherinds = list(range(len(parnames)))
+            for p in important_pars:
+                i = parnames.index(p)
+                ind_important_pars.append(i)
+                otherinds.remove(i)
+            inds = random.sample(otherinds, max_imp - n)
+            for i in range(max_imp-n):
+                ind_important_pars.append(inds[i])
+            ind_important_pars = np.array(ind_important_pars)
+            important_pars = \
+                mm.give_vec_for(mm.transf_print, justnames=True,
+                                shortnames=True)[ind_important_pars]
+        else:
+            ind_important_pars = []
+            for p in important_pars:
+                ind_important_pars.append(parnames.index(p))
+            ind_important_pars = np.array(ind_important_pars)
+    if ind_discrete_pars is None:
+        # Find the indices of the discrete parameters in the numpy vector
         parnames = list(mm.give_vec_for(mm.transf_print, justnames=True))
-        ind_important_pars = []
-        for p in important_pars:
-            ind_important_pars.append(parnames.index(p))
-        ind_important_pars = np.array(ind_important_pars)
-    return ind_important_pars
+        ind_discrete_pars = []
+        for p in discrete_pars:
+            pindiv = p + '['
+            pmean = p + '_mean'
+            for i in range(len(parnames)):
+                if ( (p == parnames[i]) | (pmean == parnames[i])
+                     | ( pindiv in parnames[i] ) ):
+                    ind_discrete_pars.append(parnames.index(parnames[i]))
+        ind_discrete_pars = np.array(ind_discrete_pars)
+    return ind_important_pars, ind_discrete_pars
         
 def set_pars(theta):
     """ 
@@ -319,27 +377,21 @@ def set_pars(theta):
     """
     mm.take_vec_from_mcmc(theta)
 
-def get_pars(transf_type, justnames=False):
+def get_pars(transf_type, justnames=False, shortnames=False):
     """
     Public method for getting the parameters and the parameter names
     from the mod-hyp module. (Called by mcmc_mixed-effects.py)
     """
     if ( (transf_type == 'print')
          | ( (transf_type == 'plot') & (plot_with_print_transformation) ) ):
-        if justnames:
-            return mm.give_vec_for(mm.transf_print, justnames=True)
-        else:
-            return mm.give_vec_for(mm.transf_print, justnames=False)
+        return mm.give_vec_for(mm.transf_print,
+                               justnames=justnames, shortnames=shortnames)
     elif (transf_type == 'plot'):
-        if justnames:
-            return mm.give_vec_for(mm.transf_plot, justnames=True)
-        else:
-            return mm.give_vec_for(mm.transf_plot, justnames=False)        
+        return mm.give_vec_for(mm.transf_plot,
+                               justnames=justnames, shortnames=shortnames)                               
     elif (transf_type == 'mcmc'):
-        if justnames:
-            return mm.give_vec_for(mm.transf_mcmc, justnames=True)
-        else:
-            return mm.give_vec_for(mm.transf_mcmc, justnames=False)        
+        return mm.give_vec_for(mm.transf_mcmc,
+                               justnames=justnames, shortnames=shortnames)                               
 
 def log_like_and_prior(theta):
     """

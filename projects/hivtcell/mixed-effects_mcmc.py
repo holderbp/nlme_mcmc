@@ -32,7 +32,7 @@ import module_mixed_effects_model as mm
 #
 #import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_thalf_COM_sigma as mod
 #import module_hivtcell_modhyp_virusdecay_IPOP_none_INOPOP_A_B_COM_thalf_sigma as mod
-#import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
+import module_hivtcell_modhyp_virusdecay_IPOP_thalf_INOPOP_A_B_COM_sigma as mod
 #import module_hivtcell_modhyp_virusdecay_IPOP_thalf_sigma_INOPOP_A_B_COM_none as mod
 #import module_hivtcell_modhyp_virusdecay_IPOP_sigma_INOPOP_A_B_COM_thalf as mod
 #
@@ -40,7 +40,7 @@ import module_mixed_effects_model as mm
 #
 #import module_hivtcell_modhyp_ecp_uninf_timeseries_IPOP_none_INOPOP_N_tauT_tD_COM_none_CONST_nT as mod
 #import module_hivtcell_modhyp_ecp_uninf_timeseries_IPOP_none_INOPOP_N_tauT_tD_COM_sigma_CONST_nT as mod
-import module_hivtcell_modhyp_ecp_uninf_timeseries_IPOP_none_INOPOP_N_tauT_nT_tD_COM_sigma_CONST_s as mod
+#import module_hivtcell_modhyp_ecp_uninf_timeseries_IPOP_none_INOPOP_N_tauT_nT_tD_COM_sigma_CONST_s as mod
 #==============================================================
 #//////////////////////////////////////////////////////////////
 
@@ -199,7 +199,7 @@ mm.mcmc_skip_initial_state_check = False
 #    if None, then set below after mod-hyp module is initialized with:
 #          mm.mcmc_N_walkers = int( ncpu * ceil( 2 * npars / ncpu) )
 #
-mm.mcmc_N_walkers = 100
+mm.mcmc_N_walkers = None
 mm.mcmc_N_steps_max = 1000000
 mm.mcmc_N_steps_restart = 20000 # for restarting a chain (mcmc_run_to_convergence = False)
 mm.mcmc_initial_bundle_fractional_width = 1e-1
@@ -282,6 +282,8 @@ mm.chains_data_file = datadir + timestring + "_" \
     + "chains" + "_" + file_suffix + ".npy"  # numpy file
 mm.samples_fig_file = plotdir + timestring + "_" \
     + "samples" + "_" + file_suffix + ".pdf"
+mm.samples_hist_file = plotdir + timestring + "_" \
+    + "hist-samples" + "_" + file_suffix + ".pdf"
 mm.samples_data_file = datadir + timestring + "_" \
     + "samples" + "_" + file_suffix + ".dat"
 mm.samples_logprob_data_file = datadir + timestring + "_" \
@@ -352,6 +354,12 @@ print("mcmc_N_walkers = " + str(mm.mcmc_N_walkers))
 mm.par_names_print = mod.get_pars('print', justnames=True)
 mm.par_names_plot = mod.get_pars('plot', justnames=True)
 mm.par_names_mcmc = mod.get_pars('mcmc', justnames=True)
+mm.par_names_print_short = mod.get_pars('print',
+                                        justnames=True, shortnames=True)
+mm.par_names_plot_short = mod.get_pars('plot',
+                                        justnames=True, shortnames=True)
+mm.par_names_mcmc_short = mod.get_pars('mcmc',
+                                        justnames=True, shortnames=True)
 mm.ind_important_pars, mm.ind_discrete_pars = \
     mod.get_index_important_and_discrete_pars()
 mm.imp_par_names_print = mm.par_names_print[mm.ind_important_pars]

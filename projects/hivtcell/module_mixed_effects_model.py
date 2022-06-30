@@ -11,6 +11,10 @@ import corner
 import matplotlib
 #matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+import matplotlib.backends.backend_pdf as mplbp
+import seaborn as sns
+# make default style for seaborn
+sns.set()
 import multiprocessing as mp
 
 #==============================================================
@@ -67,6 +71,7 @@ mcmc_run_to_convergence_plot_chains = None
 mcmc_run_to_convergence_save_chains = None
 mcmc_run_to_convergence_chains_max_taus = None
 mcmc_run_to_convergence_save_samples = None
+mcmc_run_to_convergence_plot_sample_histograms = None
 mcmc_save_samples_max = None
 mcmc_skip_initial_state_check = None
 mcmc_N_walkers = None
@@ -87,6 +92,9 @@ ml_fac_to_reduce_sigma = None
 par_names_print = None
 par_names_plot = None
 par_names_mcmc = None
+par_names_print_short = None
+par_names_plot_short = None
+par_names_mcmc_short = None
 #  important (non-nuisance) parameters
 ind_important_pars = None
 imp_par_names_print = None
@@ -100,6 +108,7 @@ discrete_par_names = None
 #=== Figure/Plotting options
 cornerplot_plot_maxvals = None
 cornerplot_make_allplot = None
+histograms_plot_maxvals = None
 
 #=== File and output
 file_chain = None
@@ -110,6 +119,7 @@ marglike_data_file = None
 chains_fig_file = None
 chains_data_file = None 
 samples_fig_file = None
+samples_hist_file = None
 samples_data_file = None
 samples_logprob_data_file = None
 samples_loglike_data_file = None
@@ -326,51 +336,6 @@ def get_poisson_loglike(yvals, ymod):
     # return the result
     return retval
 
-def get_index_important_and_discrete_pars():
-    """
-    Public method for getting the numpy vector indices of those
-    parameters that are considered "important" (non-nuisance).
-    """
-    global ind_important_pars, important_pars, ind_discrete_pars
-    if ind_important_pars is None:
-        # Find the indices of the important parameters in the numpy vector 
-        parnames = list(mm.give_vec_for(mm.transf_print, justnames=True))
-        max_imp = np.min([5, len(parnames)])
-        if (len(important_pars) < max_imp):
-            print(f"\t(well...there were only {len(important_pars):d} ", end='')
-            print("given, so we'll randomly choose a few more)")
-            # if less than max_imp were given, add a few randomly to make max_imp
-            n = len(important_pars)
-            ind_important_pars = []
-            otherinds = list(range(len(parnames)))
-            for p in important_pars:
-                i = parnames.index(p)
-                ind_important_pars.append(i)
-                otherinds.remove(i)
-            inds = random.sample(otherinds, max_imp - n)
-            for i in range(max_imp-n):
-                ind_important_pars.append(inds[i])
-            ind_important_pars = np.array(ind_important_pars)
-            important_pars = \
-                mm.give_vec_for(mm.transf_print, justnames=True)[ind_important_pars]
-        else:
-            ind_important_pars = []
-            for p in important_pars:
-                ind_important_pars.append(parnames.index(p))
-            ind_important_pars = np.array(ind_important_pars)
-    if ind_discrete_pars is None:
-        # Find the indices of the discrete parameters in the numpy vector
-        parnames = list(mm.give_vec_for(mm.transf_print, justnames=True))
-        ind_discrete_pars = []
-        for p in discrete_pars:
-            pindiv = p + '['
-            pmean = p + '_mean'
-            for i in range(len(parnames)):
-                if ( (p == parnames[i]) | (pmean == parnames[i])
-                     | ( pindiv in parnames[i] ) ):
-                    ind_discrete_pars.append(parnames.index(parnames[i]))
-        ind_discrete_pars = np.array(ind_discrete_pars)
-    return ind_important_pars, ind_discrete_pars
 def print_list_w_commas(thelist):
     first=True
     for p in thelist:
@@ -595,7 +560,7 @@ def get_name_w(transf_func, parname, i=None):
         print("***Error: transform " + transf_func[parname] + " not found")
     exit(0)
 
-def give_vec_for(transf_func, justnames=False):
+def give_vec_for(transf_func, justnames=False, shortnames=False):
     """
     Returns the numpy array of all parameters to be used by:
                
@@ -610,19 +575,31 @@ def give_vec_for(transf_func, justnames=False):
     if justnames:
         arr = []
         for p in list_indiv_pop_pars:
+            ind = 0
             for i in indiv_pop.index:
+                if shortnames:
+                    iname = str(ind)
+                else:
+                    iname = i
                 # only send the non-NaN values into arr
                 if ~np.isnan(indiv_pop.at[i,p]):
                     arr = np.concatenate(
-                        (arr, [ get_name_w(transf_func, p + "_mean", i=i) ])
+                        (arr, [ get_name_w(transf_func, p + "_mean", i=iname) ])
                     )
+                ind += 1
         for p in list_indiv_nopop_pars:
+            ind = 0
             for i in indiv_nopop.index:
+                if shortnames:
+                    iname = str(ind)
+                else:
+                    iname = i
                 # only send the non-NaN values into arr                
                 if ~np.isnan(indiv_nopop.at[i,p]):                
                     arr = np.concatenate(
-                        (arr, [ get_name_w(transf_func, p, i=i) ])
+                        (arr, [ get_name_w(transf_func, p, i=iname) ])
                     )
+                ind += 1
         for p in list_indiv_pop_pars:
             arr = np.concatenate( (arr, [get_name_w(transf_func, p + "_mean")]) )
             arr = np.concatenate( (arr, [get_name_w(transf_func, p + "_stdev")]) )
@@ -1063,39 +1040,57 @@ def conv_check_get_marginal_likelihood(flat_samples, flat_loglike, flat_logprior
     return hm, gd
 
 def plot_and_save_chains(sampler, tau_max):
-    # Plot the chains of each "important" parameter
-    # Get the last few autocorr times of the chain
+    """
+    Plot the chains of each "important" parameter
+    """
+    # Get the chains for the last few autocorr times of the chain
     Npoints = int(mcmc_run_to_convergence_chains_max_taus * tau_max)
-    # get only the last bit of the chain for only those parameters
-    samples = sampler.get_chain()[-Npoints:]
-    # make a figure
-    plt.close('all')
-    figCh, axes = plt.subplots(N_imp_pars, figsize=(10, 7), sharex=True)
-    if (N_imp_pars > 1):
-        for i in range(N_imp_pars):
-            ax = axes[i]
-            ind = ind_important_pars[i]
-            ax.plot(samples[:, :, ind], "k", alpha=0.3)
-            ax.set_xlim(0, len(samples))
-            ax.set_ylabel(imp_par_names_mcmc[i])
-            ax.yaxis.set_label_coords(-0.1, 0.5)
-        axes[-1].set_xlabel(f"step number (of last {Npoints:d})")
-    else:
-        ind = ind_important_pars[0]        
-        axes.plot(samples[:, :, ind], "k", alpha=0.3)
-        axes.set_xlim(0, len(samples))
-        axes.set_ylabel(imp_par_names_mcmc[0])
-        axes.yaxis.set_label_coords(-0.1, 0.5)
-        axes.set_xlabel(f"step number (of last {Npoints:d})")
-    figCh.savefig(chains_fig_file)
-    print(f"  Plotted the last {Npoints:d} of the chains.")        
-    # Save up last bit of the chain
+    samples = sampler.get_chain()[-Npoints:] # [npoints, nwalkers, npars]
+    #=== make a multi-page PDF figure showing chains of all parameters
+    plt.close('all')    
+    figx = 8
+    figy = 10.5
+    plots_per_page = 5 # we'll do 5 rows
+    nrows = plots_per_page
+    ncols = 1
+    npars = len(samples[0,0,:])
+    npages = int(np.ceil(npars/plots_per_page))
+    # make a set of figure labels
+    figure_nums = np.arange(npages)
+    figs = []
+    axs = []
+    for n in range(npages):
+        f, a = plt.subplots(nrows, ncols, figsize = (figx, figy), num = n)
+        figs.append(f)
+        axs.append(a)
+    # plot chains
+    for p in range(npars):
+        page = p // plots_per_page
+        r = p % plots_per_page
+        plt.figure(figs[page])
+        ax = axs[page][r]
+        ax.plot(samples[:, :, p], "k", alpha=0.3)        
+        ax.set_xlim(0, len(samples))
+        ax.set_ylabel(par_names_mcmc_short[p])
+        ax.yaxis.set_label_coords(-0.1, 0.5)
+    for n in range(npages):
+        plt.figure(figs[n])
+        axs[n][-1].set_xlabel(f"step number (of last {Npoints:d})")
+    # put into multi-page pdf
+    with mplbp.PdfPages(chains_fig_file) as pdf:
+        for p in figs:
+            plt.figure(p)
+            plt.tight_layout()
+            pdf.savefig()
+            plt.close()
+    print(f"  Plotted the last {Npoints:d} of the chains.")
+    # save chains data to file
     if mcmc_run_to_convergence_save_chains:
         print(f"  Saved the last {Npoints:d} of the chain to file.")    
         np.save(chains_data_file, samples)
 
 def plot_and_save_samples(sampler, tau_max):
-    # get independent samples (and the blob values
+    #=== get independent samples (and the blob values
     burnin, thin = get_burn_thin(tau_max)
     flat_samples = sampler.get_chain(discard=burnin, thin=thin, flat=True)
     flat_log_prob = sampler.get_log_prob(discard=burnin, thin=thin, flat=True)
@@ -1108,28 +1103,79 @@ def plot_and_save_samples(sampler, tau_max):
         Npoints = mcmc_save_samples_max
     else:
         Npoints = nsamps
-    # make a figure showing the important parameters
-    plt.close('all')
-    figSa, axes = plt.subplots(N_imp_pars, figsize=(10, 7), sharex=True)
-    if (N_imp_pars > 1):
-        for i in range(N_imp_pars):
-            ax = axes[i]
-            ind = ind_important_pars[i]
-            ax.plot(flat_samples[-1*Npoints:,ind], "k", alpha=0.3)
-            ax.set_xlim(0, Npoints)
-            ax.set_ylabel(imp_par_names_mcmc[i])
-            ax.yaxis.set_label_coords(-0.1, 0.5)
-        axes[-1].set_xlabel(f"steps / thin (last {Npoints:d} samples)")
-    else:
-        ind = ind_important_pars[0]
-        axes.plot(flat_samples[-1*Npoints:,ind], "k", alpha=0.3)
-        axes.set_xlim(0, Npoints)
-        axes.set_ylabel(imp_par_names_mcmc[0])
-        axes.yaxis.set_label_coords(-0.1, 0.5)
-        axes.set_xlabel(f"steps / thin (last {Npoints:d} samples)")
-    figSa.savefig(samples_fig_file)
-    # Save up to mcmc_save_samples_max samples (all parameters)
+    #=== make a multi-page PDF figure showing samples of all parameters
+    plt.close('all')    
+    figx = 8
+    figy = 10.5
+    plots_per_page = 5 # we'll do 5 rows
+    nrows = plots_per_page
+    ncols = 1
+    npars = len(flat_samples[0])
+    npages = int(np.ceil(npars/plots_per_page))
+    # make a set of figure labels
+    figure_nums = np.arange(npages)
+    figs = []
+    axs = []
+    for n in range(npages):
+        f, a = plt.subplots(nrows, ncols, figsize = (figx, figy), num = n)
+        figs.append(f)
+        axs.append(a)
+    # plot samples
+    for p in range(npars):
+        page = p // plots_per_page
+        r = p % plots_per_page
+        plt.figure(figs[page])
+        ax = axs[page][r]
+        ax.scatter(np.arange(0, Npoints), flat_samples[-1*Npoints:,p], s=0.5)
+        ax.set_xlim(0, Npoints)
+        ax.set_ylabel(par_names_mcmc_short[p])
+        ax.yaxis.set_label_coords(-0.1, 0.5)
+    for n in range(npages):
+        plt.figure(figs[n])
+        axs[n][-1].set_xlabel(f"steps / thin (last {Npoints:d} samples)")
+    # put into multi-page pdf
+    with mplbp.PdfPages(samples_fig_file) as pdf:
+        for p in figs:
+            plt.figure(p)
+            plt.tight_layout()
+            pdf.savefig()
+            plt.close()
     print(f"  Plotted and saved the last {Npoints:d} samples (and blobs).")
+    #=== make a multi-page PDF figure showing histograms of samples of all parameters
+    plt.close('all')    
+    figx = 8
+    figy = 10.5
+    plots_per_page = 4 # we'll do 2 rows x 2 cols
+    nrows = 2
+    ncols = 2
+    plots_per_page = nrows * ncols
+    npages = int(np.ceil(npars/plots_per_page))
+    # make a set of figure labels
+    figure_nums = np.arange(npages)
+    figs = []
+    axs = []
+    for n in range(npages):
+        f, a = plt.subplots(nrows, ncols, figsize = (figx, figy), num = n)
+        figs.append(f)
+        axs.append(a)
+    # plot samples
+    for p in range(npars):
+        page = p // plots_per_page
+        r = (p % plots_per_page) // nrows
+        c = (p % plots_per_page) % nrows
+        plt.figure(figs[page])
+        ax = axs[page][r,c]
+        sns.histplot(data = flat_samples[-1*Npoints:, p], ax=ax)
+        ax.set_xlabel(par_names_mcmc_short[p])
+    # put into multi-page pdf
+    with mplbp.PdfPages(samples_hist_file) as pdf:
+        for p in figs:
+            plt.figure(p)
+            plt.tight_layout()
+            pdf.savefig()
+            plt.close()
+    print(f"  Plotted and saved the last {Npoints:d} samples (and blobs).")
+    #=== Save the sample data to file
     np.savetxt(samples_data_file, flat_samples[-1*Npoints:,:])
     np.savetxt(samples_logprob_data_file, flat_log_prob[-1*Npoints:])
     np.savetxt(samples_loglike_data_file, flat_log_like[-1*Npoints:])
@@ -1264,7 +1310,7 @@ def sample_to_convergence(sampler, init_pos, restart=False):
             plot_and_save_chains(sampler, tau_max)
         if mcmc_run_to_convergence_save_samples:
             # plot and save a set of the last few (~1000) independent samples 
-            plot_and_save_samples(sampler, tau_max)            
+            plot_and_save_samples(sampler, tau_max)
         if mcmc_run_to_convergence_get_marginal_likelihood:
             # print info about the marginal likelihood, 
             # make a plot of ML vs steps, and save data to a file
@@ -1454,6 +1500,9 @@ def get_top_posterior_values_and_compare(flat_logprob, flat_samples, pars_MAP):
     print(flat_samples[parind,ind_important_pars])
     print(f"With log(posterior) = {flat_logprob[parind]:.5e}")
 
+def get_histograms(flat_samples_transformed_plot, pars_MAP_transformed):
+    pass
+    
 def get_corner_plots(flat_samples_transformed_plot, pars_MAP_transformed):
     flat_samples_re = flat_samples_transformed_plot[:,ind_important_pars]
     if cornerplot_plot_maxvals:
