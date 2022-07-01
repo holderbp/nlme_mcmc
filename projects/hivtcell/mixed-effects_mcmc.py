@@ -199,10 +199,11 @@ mm.mcmc_skip_initial_state_check = False
 #    if None, then set below after mod-hyp module is initialized with:
 #          mm.mcmc_N_walkers = int( ncpu * ceil( 2 * npars / ncpu) )
 #
-mm.mcmc_N_walkers = None
+mm.mcmc_N_walkers = 200
 mm.mcmc_N_steps_max = 1000000
 mm.mcmc_N_steps_restart = 20000 # for restarting a chain (mcmc_run_to_convergence = False)
 mm.mcmc_initial_bundle_fractional_width = 1e-1
+mm.mcmc_initial_uniform = True # don't make bundle, do uniform
 mm.mcmc_burnin_drop = 2 # in number of autocorrelation times
 mm.mcmc_thin_by = 0.5 # keep data at only every XX autocorrelation times
 #==============================================================
@@ -332,6 +333,7 @@ print("mcmc_skip_initial_state_check = " + str(mm.mcmc_skip_initial_state_check)
 print("mcmc_N_steps_max = " + str(mm.mcmc_N_steps_max))
 print("mcmc_N_steps_restart = " + str(mm.mcmc_N_steps_restart))
 print("mcmc_initial_bundle_fractional_width = " + str(mm.mcmc_initial_bundle_fractional_width))
+print("mcmc_initial_uniform = " + str(mm.mcmc_initial_uniform))
 print("mcmc_burnin_drop = " + str(mm.mcmc_burnin_drop))
 print("mcmc_thin_by = " + str(mm.mcmc_thin_by))
 

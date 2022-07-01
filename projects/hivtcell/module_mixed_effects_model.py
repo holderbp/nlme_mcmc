@@ -78,6 +78,7 @@ mcmc_N_walkers = None
 mcmc_N_steps_max = None
 mcmc_N_steps_restart = None
 mcmc_initial_bundle_fractional_width = None
+mcmc_initial_uniform = None
 mcmc_burnin_drop = None
 mcmc_thin_by = None
 
@@ -963,20 +964,93 @@ def get_mcmc_N_steps(restart):
         return mcmc_N_steps_restart
     else:
         return mcmc_N_steps_max
-    
+
+def get_minmax_normal(parname):
+    return [prior_mean[parname] - 2*prior_stdev[parname],
+            prior_mean[parname] + 2*prior_stdev[parname]]
+
+def get_minmax_lognormal(parname):
+    return [np.log(prior_mean[parname]) - 2*prior_stdev[parname],
+            np.log(prior_mean[parname]) + 2*prior_stdev[parname]]
+
+def get_unif_dist(p, prior_type, Npars):
+    if (prior_type == 'normal'):
+        pmin, pmax = get_minmax_normal(p)
+        r = np.random.uniform(low=pmin, high=pmax,
+                              size=(mcmc_N_walkers, Npars))
+    elif (prior_type == 'lognormal'):
+        logpmin, logpmax = get_minmax_lognormal(p)
+        r = np.random.uniform(low=logpmin, high=logpmax,
+                              size=(mcmc_N_walkers, Npars))
+        r = np.exp(r)
+    elif (prior_type == 'uniform'):
+        pmin, pmax = prior_min[p], prior_max[p]
+        r = np.random.uniform(low=pmin, high=pmax,
+                              size=(mcmc_N_walkers, Npars))
+    else:
+        print("***Error setting initial distribution. Prior ",
+              prior_type, "not found.")
+        exit(0)
+    return r
+
 def get_init_pos(pars_map):
-    n_dim = len(pars_map)
-    # tight bundle about max a posteriori
-    pos = ( pars_map + np.abs(pars_map)*mcmc_initial_bundle_fractional_width
-            * np.random.randn(mcmc_N_walkers, n_dim))
-    # except for discrete parameters which get uniform spread over prior
-    for i in range(len(ind_discrete_pars)):
-        # if par name is for individual it will be saved as par[indivname]
-        short_name = discrete_par_names[i].split('[')[0]
-        pos[:,ind_discrete_pars[i]] = np.random.uniform(low=prior_min[short_name],
-                                                        high=prior_max[short_name],
-                                                        size=mcmc_N_walkers)
-    return pos, n_dim
+    if mcmc_initial_uniform:
+        print("Getting an initial set of walkers with uniform distribution over (95%) par space")
+        first = True
+        for p in list_indiv_pop_pars:
+            Ngood = np.sum( ~np.isnan( indiv_pop[p].to_numpy() ) )
+            r = get_unif_dist(p + '_mean', prior_dist[p + '_mean'], Ngood)
+            rt = get_val_w(transf_mcmc, p + '_mean', r)
+            if first:
+                pos = rt
+                first = False
+            else:
+                pos = np.concatenate( (pos, rt), axis=1)
+        for p in list_indiv_nopop_pars:
+            Ngood = np.sum( ~np.isnan( indiv_nopop[p].to_numpy() ) )
+            r = get_unif_dist(p, prior_dist[p], Ngood)
+            rt = get_val_w(transf_mcmc, p, r)
+            if first:
+                pos = rt
+                first = False
+            else:
+                pos = np.concatenate( (pos, rt), axis=1)
+        for p in list_indiv_pop_pars:
+            for s in ['_mean', '_stdev']:
+                r = get_unif_dist(p + s, prior_dist[p+s], 1)
+                rt = get_val_w(transf_mcmc, p + s, r)
+                if first:
+                    pos = rt
+                    first = False
+                else:
+                    pos = np.concatenate( (pos, rt), axis=1)
+        for p in list_other_pars:
+            r = get_unif_dist(p, prior_dist[p], 1)
+            rt = get_val_w(transf_mcmc, p, r)
+            if first:
+                pos = rt
+                first = False
+            else:
+                pos = np.concatenate( (pos, rt), axis=1)
+        npars = len(pos[0,:])
+    else:
+        print("Getting an initial bundle of walkers about the MAP position, with discrete pars distributed uniformly.")
+        npars = len(pars_map)
+        # tight bundle about max a posteriori
+        pos = ( pars_map + np.abs(pars_map)*mcmc_initial_bundle_fractional_width
+                * np.random.randn(mcmc_N_walkers, npars))
+        # except for discrete parameters which are always uniform spread
+        print("Setting uniform distribution of discrete initial parameters:")
+        for i in range(len(ind_discrete_pars)):
+            # if par name is for individual it will be saved as par[indivname]
+            short_name = discrete_par_names[i].split('[')[0]
+            print("   " + short_name  + "[" + i + "] : ["
+                  + str(prior_min[short_name]) + 
+                  + ", " + str(prior_max[short_name]) + "]")
+            pos[:,ind_discrete_pars[i]] = np.random.uniform(low=prior_min[short_name],
+                                                            high=prior_max[short_name],
+                                                            size=mcmc_N_walkers)
+    return pos, npars
 
 def print_mcmc_convergence_step(Nsteps, tau_max, tau_frac_max):
     time_elapsed = dt.datetime.now() - start_time
@@ -1174,7 +1248,7 @@ def plot_and_save_samples(sampler, tau_max):
             plt.tight_layout()
             pdf.savefig()
             plt.close()
-    print(f"  Plotted and saved the last {Npoints:d} samples (and blobs).")
+    print(f"  Plotted and saved the last {Npoints:d} samples histograms.")
     #=== Save the sample data to file
     np.savetxt(samples_data_file, flat_samples[-1*Npoints:,:])
     np.savetxt(samples_logprob_data_file, flat_log_prob[-1*Npoints:])
@@ -1189,7 +1263,7 @@ def plot_and_save_marginal_likelihood(n_steps, lml_hm, lml_gd):
         axml.plot(n_steps, lml_gd, '-bo')
         axml.set_ylabel("logML_gd (b)")
         maxval = np.max(lml_gd)
-        minval = np.max(lml_gd)
+        minval = np.min(lml_gd)
     else:
         axml.plot(n_steps, lml_hm, '-ro')
         axml.plot(n_steps, lml_gd, '-bo')

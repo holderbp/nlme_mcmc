@@ -129,7 +129,7 @@ def find_par_in_par_objects(parkey, indiv_name):
         return indiv_pop.at[indiv_name, parkey]
     elif (parkey in indiv_nopop.columns):
         return indiv_nopop.at[indiv_name, parkey]
-    elif (parkey in other):
+    elif (parkey in other.columns):
         return other[parkey]
     else:
         print("***Error (evolvemodel):", parkey, "not in parameter objects.")
